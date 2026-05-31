@@ -92,7 +92,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 const LETRAS = ['A','B','C','D','E'];
 let avaliacao = null;
 let respostas = [];
-const AV_ID = '${id || ''}';
+const AV_ID = '__AV_ID__';
 
 async function carregar() {
   if (!AV_ID) { mostrarErro(); return; }
@@ -204,6 +204,8 @@ carregar();
 </script>
 </body>
 </html>`;
+  const safeId = (id || '').replace(/[^A-Z0-9\-]/gi, '');
+  const finalHtml = html.replace('__AV_ID__', safeId);
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.status(200).send(html);
+  res.status(200).send(finalHtml);
 };
