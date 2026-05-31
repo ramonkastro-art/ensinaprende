@@ -1,11 +1,36 @@
 {
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/painel", "destination": "/api/painel-view" },
-    { "source": "/manifest.json", "destination": "/public/manifest.json" },
-    { "source": "/sw.js", "destination": "/public/sw.js" },
-    { "source": "/icon-192.png", "destination": "/public/icon-192.png" },
-    { "source": "/icon-512.png", "destination": "/public/icon-512.png" },
-    { "source": "/(.*)", "destination": "/public/$1" }
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    },
+    {
+      "source": "/painel",
+      "destination": "/api/painel-view"
+    },
+    {
+      "source": "/manifest.json",
+      "destination": "/public/manifest.json"
+    },
+    {
+      "source": "/sw.js",
+      "destination": "/public/sw.js"
+    },
+    {
+      "source": "/icon-192.png",
+      "destination": "/public/icon-192.png"
+    },
+    {
+      "source": "/icon-512.png",
+      "destination": "/public/icon-512.png"
+    },
+    {
+      "source": "/avaliacao",
+      "destination": "/public/avaliacao.html"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/public/$1"
+    }
   ]
 }
