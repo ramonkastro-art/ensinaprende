@@ -137,6 +137,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .btn-nova-correcao{margin-top:16px;padding:12px 24px;background:rgba(255,255,255,.2);border:2px solid rgba(255,255,255,.4);color:#fff;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;}
 .btn-nova-correcao:hover{background:rgba(255,255,255,.3);}
 
+/* LOADING OVERLAY CORREÇÃO */
+.correcao-loading{display:none;text-align:center;padding:32px 16px;}
+.correcao-loading.show{display:block;}
+.dots{display:inline-flex;gap:6px;margin-top:10px;}
+.dots span{width:10px;height:10px;border-radius:50%;background:var(--accent);animation:bounce .8s infinite;}
+.dots span:nth-child(2){animation-delay:.15s;}
+.dots span:nth-child(3){animation-delay:.3s;}
+@keyframes bounce{0%,80%,100%{transform:scale(.6);opacity:.4}40%{transform:scale(1);opacity:1}}
+
 /* FOLHA RESPOSTA (impressão) */
 @media print{
   body *{visibility:hidden;}
@@ -312,6 +321,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 // ══════════════════════════════════════════════
 // ESTADO GLOBAL
 // ══════════════════════════════════════════════
+const LETRAS = ['A','B','C','D','E'];
 let avaliacaoAtual = null; // { questoes, gabarito, config }
 let respostasAluno = [];   // ['A','','C',...]
 
@@ -453,8 +463,8 @@ function renderizarQuestoes() {
   list.innerHTML = '';
 
   avaliacaoAtual.questoes.forEach((q, qi) => {
-    const letras = ['A','B','C','D','E'];
-    const altsHTML = letras.map(l => \`
+    // letras = LETRAS (global)
+    const altsHTML = LETRAS.map(l => \`
       <div class="alt-row">
         <div class="alt-letra \${q.gabarito===l ? 'correta':''}" 
              onclick="toggleGabarito(\${qi},'\${l}')" 
@@ -521,7 +531,15 @@ function setupCorrecao() {
 
 function renderizarGrade() {
   const grade = document.getElementById('gradeCorrecao');
-  grade.innerHTML = '';
+  // Mostra loading brevemente para feedback visual
+  grade.innerHTML = '<div class="correcao-loading show"><p style="color:var(--muted);font-size:14px;">Carregando gabarito...</p><div class="dots"><span></span><span></span><span></span></div></div>';
+  setTimeout(() => {
+    grade.innerHTML = '';
+    _renderizarGradeInterno(grade);
+  }, 400);
+}
+
+function _renderizarGradeInterno(grade) {
   const qtd = avaliacaoAtual.questoes.length;
 
   // Gabarito visível para o professor
@@ -533,12 +551,12 @@ function renderizarGrade() {
   grade.insertAdjacentHTML('beforeend', gabHTML);
 
   avaliacaoAtual.questoes.forEach((q, qi) => {
-    const letras = ['A','B','C','D','E'];
+    // letras = LETRAS (global)
     const resp = respostasAluno[qi];
     const respondeu = resp !== '';
     const acertou = resp === q.gabarito;
 
-    const bolinhas = letras.map(l => {
+    const bolinhas = LETRAS.map(l => {
       let cls = 'bolinha';
       if (resp === l) cls += respondeu ? (acertou ? ' certa' : ' errada') : ' marcada';
       return \`<div class="\${cls}" onclick="marcarResposta(\${qi},'\${l}')">\${l}</div>\`;
@@ -657,13 +675,13 @@ async function exportarPDF() {
   let pageNum = 1;
   drawFooter(doc, pageNum);
 
-  const letras = ['A','B','C','D','E'];
+  // letras = LETRAS (global)
 
   for (let qi = 0; qi < questoes.length; qi++) {
     const q = questoes[qi];
     // Estima altura necessária
     const enuncLines = doc.setFontSize(11) || doc.splitTextToSize(\`\${qi+1}. \${q.enunciado}\`, cW);
-    const altLines = letras.reduce((acc,l) => acc + doc.splitTextToSize(\`    \${l}) \${q.alternativas[l]||''}\`, cW-6).length, 0);
+    const altLines = LETRAS.reduce((acc,l) => acc + doc.splitTextToSize(\`    \${l}) \${q.alternativas[l]||''}\`, cW-6).length, 0);
     const needed = (enuncLines.length * 5.5) + (altLines * 5) + 12;
 
     if (y + needed > PAGE_H - FOOTER_H - 5) {
@@ -683,7 +701,7 @@ async function exportarPDF() {
     y += enuncText.length * 5.5 + 2;
 
     // Alternativas
-    letras.forEach(l => {
+    LETRAS.forEach(l => {
       doc.setFontSize(10); doc.setFont('helvetica','normal'); doc.setTextColor(50,60,80);
       const altText = doc.splitTextToSize(\`\${l}) \${q.alternativas[l]||''}\`, cW-8);
       if (y + altText.length*5 > PAGE_H - FOOTER_H - 5) {
@@ -753,7 +771,7 @@ async function exportarPDF() {
   y += 8;
 
   // Grade de bolinhas — layout compacto em 2 colunas
-  const letras = ['A','B','C','D','E'];
+  // letras = LETRAS (global)
   const colW = cW / 2 - 4;
   const rowH = 10;
   const bSize = 5.5; // diâmetro da bolinha
@@ -774,7 +792,7 @@ async function exportarPDF() {
     doc.text(\`\${qi+1}\`, bx+2, by+6.8);
 
     // Bolinhas A-E
-    letras.forEach((l, li) => {
+    LETRAS.forEach((l, li) => {
       const cx = bx + 14 + li * bSpacing;
       const cy = by + rowH/2;
 
