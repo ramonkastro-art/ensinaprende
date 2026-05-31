@@ -13,8 +13,8 @@
       "destination": "/api/avaliacao-view"
     },
     {
-      "source": "/corrigir/:id",
-      "destination": "/api/corrigir-view?id=$id"
+      "source": "/corrigir",
+      "destination": "/api/corrigir-view"
     },
     {
       "source": "/manifest.json",

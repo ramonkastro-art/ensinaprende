@@ -760,7 +760,7 @@ async function exportarPDF() {
   const qrIdParaUsar = avaliacaoId || ('LOCAL-' + questoes.map(q=>q.gabarito).join(''));
   {
     try {
-      const qrUrl = 'https://aprendemaisvac.vercel.app/corrigir/' + qrIdParaUsar;
+      const qrUrl = 'https://aprendemaisvac.vercel.app/corrigir?id=' + qrIdParaUsar;
       const qrDiv = document.createElement('div');
       qrDiv.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
       document.body.appendChild(qrDiv);
