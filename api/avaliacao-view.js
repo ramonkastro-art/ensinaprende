@@ -257,6 +257,16 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--border);letter-
   </div>
 
   <div id="formSection">
+    <!-- Banner Avaliações -->
+    <a href="/avaliacao" style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#059669,#047857);color:#fff;border-radius:14px;padding:14px 18px;margin-bottom:14px;text-decoration:none;box-shadow:0 4px 16px rgba(5,150,105,.25);transition:transform .2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+      <span style="font-size:28px;">📝</span>
+      <div>
+        <div style="font-weight:700;font-size:15px;">Gerador de Avaliações</div>
+        <div style="font-size:12px;opacity:.85;">Crie provas com IA + corrija pelo celular</div>
+      </div>
+      <span style="margin-left:auto;font-size:20px;">→</span>
+    </a>
+
     <div class="input-tabs">
       <button class="tab-btn active" id="tabManualBtn" onclick="switchTab('manual')">✏️ &nbsp;Configurar manualmente</button>
       <button class="tab-btn" id="tabUploadBtn" onclick="switchTab('upload')">📷 &nbsp;Usar foto ou PDF</button>
@@ -553,7 +563,7 @@ function buildResourcePrompt(key, componente, ano, contexto) {
   }
 
   if (key === 'material') {
-    return base + '\\n\\nGere MATERIAL DE APOIO COMPLETO para uso em sala. Máximo 500 palavras.\\n\\n' + getMaterialTipo(componente) + '\\n\\nROTEIRO DE ESTUDO PARA O ALUNO\\n3 a 4 orientações de como estudar este conteúdo em casa.\\n\\nMATERIAL ADAPTADO PARA AEE\\nVersão simplificada do material para alunos com necessidades especiais. Use linguagem simples, frases curtas.';
+    return base + '\\n\\nATENÇÃO: NÃO repita o plano de aula. Gere APENAS o material de apoio abaixo.\\n\\n' + getMaterialTipo(componente) + '\\n\\nROTEIRO DE ESTUDO PARA O ALUNO\\n3 a 4 orientações práticas de como o aluno deve estudar este conteúdo em casa.\\n\\nMATERIAL ADAPTADO PARA AEE\\nVersão simplificada do mesmo material acima para alunos com necessidades especiais (dislexia, TDAH, autismo). Use linguagem simples e frases curtas. Inclua gabarito simplificado se houver atividades.';
   }
 
   if (key === 'traducao') {
