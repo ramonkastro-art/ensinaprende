@@ -850,7 +850,7 @@ async function exportarPDF() {
 
   // Legenda
   doc.setFontSize(7); doc.setFont('helvetica','normal'); doc.setTextColor(150,160,180);
-  doc.text('● Preencha completamente    ○ Não rasure    ✗ Marque apenas UMA alternativa por questão', M, y);
+  doc.text('(*) Preencha completamente a bolinha    (X) Nao rasure    Marque apenas UMA alternativa por questao', M, y);
   y += 10;
 
   // QR Code + instruções de correção
