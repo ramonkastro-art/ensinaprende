@@ -13,6 +13,15 @@ module.exports = async function handler(req, res) {
       return res.status(401).json({ error: 'Senha incorreta' });
     }
 
+    // Limpa avaliações expiradas automaticamente
+    await fetch(
+      `${SUPABASE_URL}/rest/v1/avaliacoes?expira_em=lt.${new Date().toISOString()}`,
+      {
+        method: 'DELETE',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+      }
+    ).catch(() => {}); // silencioso se falhar
+
     // Buscar planos de aula
     const r1 = await fetch(
       `${SUPABASE_URL}/rest/v1/consultas?select=componente,ano,volume,pagina,created_at,recursos,tipo&order=created_at.desc&limit=500`,
