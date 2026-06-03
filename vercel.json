@@ -41,6 +41,14 @@
       "destination": "/public/index.html"
     },
     {
+      "source": "/assinar",
+      "destination": "/api/assinar-view"
+    },
+    {
+      "source": "/assinar.html",
+      "destination": "/api/assinar-view"
+    },
+    {
       "source": "/(.*)",
       "destination": "/public/$1"
     }

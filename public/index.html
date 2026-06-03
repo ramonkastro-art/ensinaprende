@@ -302,8 +302,17 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--border);letter-
     <p style="color:var(--muted);font-size:14px;margin-bottom:24px;line-height:1.6;">Você usou todos os seus créditos gratuitos.<br>Assine para continuar gerando planos e avaliações ilimitados.</p>
     <div style="background:linear-gradient(135deg,#f0f9ff,#e0f2fe);border-radius:14px;padding:20px;margin-bottom:20px;">
       <div style="font-size:13px;color:#0369a1;font-weight:600;margin-bottom:4px;">PLANO PROFESSOR</div>
-      <div style="font-size:32px;font-weight:700;color:var(--text);">R$ 9,90<span style="font-size:14px;font-weight:400;color:var(--muted);">/mês</span></div>
-      <div style="font-size:12px;color:var(--muted);margin-top:4px;">ou R$ 109,00/ano · economize 8%</div>
+      <div style="display:flex;justify-content:space-around;margin:8px 0;">
+        <div style="text-align:center;">
+          <div style="font-size:24px;font-weight:800;color:var(--text);">R$ 9,90</div>
+          <div style="font-size:11px;color:var(--muted);">por mês</div>
+        </div>
+        <div style="width:1px;background:var(--border);"></div>
+        <div style="text-align:center;">
+          <div style="font-size:24px;font-weight:800;color:#059669;">R$ 109</div>
+          <div style="font-size:11px;color:var(--muted);">por ano 💰</div>
+        </div>
+      </div>
       <ul style="text-align:left;margin-top:16px;font-size:13px;color:var(--text);list-style:none;padding:0;display:flex;flex-direction:column;gap:6px;">
         <li>✅ Planos de aula ilimitados</li>
         <li>✅ Avaliações ilimitadas</li>
@@ -311,7 +320,14 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--border);letter-
         <li>✅ PDF profissional com IA</li>
       </ul>
     </div>
-    <button onclick="irParaPagamento()" style="width:100%;padding:14px;background:linear-gradient(135deg,#059669,#047857);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;">Assinar agora</button>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px;">
+      <button onclick="irParaPagamento('anual')" style="width:100%;padding:14px;background:linear-gradient(135deg,#059669,#047857);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;">
+        ⭐ Plano Anual — R$ 109,00/ano
+      </button>
+      <button onclick="irParaPagamento('mensal')" style="width:100%;padding:12px;background:none;border:2px solid #059669;color:#059669;border-radius:12px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;">
+        Plano Mensal — R$ 9,90/mês
+      </button>
+    </div>
     <button onclick="fecharUpgrade()" style="width:100%;padding:10px;background:none;border:none;font-family:inherit;font-size:13px;color:var(--muted);cursor:pointer;">Continuar no plano gratuito</button>
   </div>
 </div>
@@ -525,6 +541,7 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--border);letter-
 var SUPA_URL = 'https://lgugjikghdelbqlxmhqd.supabase.co';
 var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxndWdqaWtnaGRlbGJxbHhtaHFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIxMjg4NzUsImV4cCI6MjA4NzcwNDg3NX0.WS9WTMwseWEKZHP8N4th3qfnrdaNCu2Ii2q-yadiU7E';
 var supabase = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+var planoUpgrade = 'anual';
 
 var LIMITE_PLANO = 2;
 var LIMITE_AVALIACAO = 1;
@@ -704,10 +721,10 @@ function mostrarUpgrade() {
 function fecharUpgrade() {
   document.getElementById('upgradeOverlay').style.display = 'none';
 }
-function irParaPagamento() {
-  // Etapa 2 — Mercado Pago
-  showToast('Pagamento em breve! Em implementação.');
+function irParaPagamento(plano) {
+  const p = plano || planoUpgrade || 'anual';
   fecharUpgrade();
+  window.location.href = '/assinar?plano=' + p;
 }
 
 // Inicia auth ao carregar

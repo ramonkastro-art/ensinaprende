@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Ensinaprende+ | Assinar Plano Professor</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://sdk.mercadopago.com/js/v2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--bg:#f4f6fb;--surface:#fff;--border:#e2e8f0;--accent:#2563eb;--text:#1e2433;--muted:#7c8499;--green:#059669;--red:#dc2626;--orange:#d97706;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+.header{background:linear-gradient(135deg,#1e3a5f,#1d4ed8);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;}
+.brand{font-size:20px;font-weight:800;}<br>.brand .a{color:#fff;}.brand .b{color:#fde68a;}.brand .c{color:#fff;}
+.back-btn{color:rgba(255,255,255,.8);font-size:13px;text-decoration:none;display:flex;align-items:center;gap:6px;}
+.main{max-width:600px;margin:0 auto;padding:24px 16px 80px;}
+
+/* Seletor de planos */
+.planos{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px;}
+.plano-card{border:2px solid var(--border);border-radius:16px;padding:20px;cursor:pointer;transition:all .2s;position:relative;background:var(--surface);}
+.plano-card.selected{border-color:var(--accent);background:rgba(37,99,235,.04);}
+.plano-card.popular::before{content:'Mais popular';position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--orange);color:#fff;font-size:11px;font-weight:700;padding:3px 12px;border-radius:20px;white-space:nowrap;}
+.plano-nome{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+.plano-valor{font-size:28px;font-weight:800;color:var(--text);}
+.plano-valor span{font-size:13px;font-weight:400;color:var(--muted);}
+.plano-economia{font-size:12px;color:var(--green);font-weight:600;margin-top:4px;}
+
+/* Benefícios */
+.beneficios{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:20px;}
+.beneficios h3{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;}
+.beneficio{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--text);margin-bottom:8px;}
+.beneficio:last-child{margin-bottom:0;}
+
+/* Métodos pagamento */
+.metodos{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:20px;}
+.metodo-btn{border:2px solid var(--border);border-radius:12px;padding:14px 8px;cursor:pointer;text-align:center;background:var(--surface);transition:all .2s;}
+.metodo-btn.selected{border-color:var(--accent);background:rgba(37,99,235,.04);}
+.metodo-btn .icon{font-size:24px;display:block;margin-bottom:4px;}
+.metodo-btn .label{font-size:12px;font-weight:600;color:var(--text);}
+
+/* Form */
+.form-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:20px;}
+.form-card h3{font-size:14px;font-weight:700;margin-bottom:16px;color:var(--text);}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px;}
+.field input{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;color:var(--text);outline:none;transition:border .2s;}
+.field input:focus{border-color:var(--accent);}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+#cardForm, #pixInfo, #boletoInfo{display:none;}
+
+/* PIX display */
+.pix-container{text-align:center;padding:20px;}
+.pix-qr{width:200px;height:200px;margin:0 auto 16px;border:2px solid var(--border);border-radius:12px;overflow:hidden;}
+.pix-qr img{width:100%;height:100%;}
+.pix-code{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;font-size:11px;word-break:break-all;color:var(--muted);margin-bottom:12px;max-height:80px;overflow:hidden;}
+.copy-btn{width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;}
+
+/* Botão pagar */
+.btn-pagar{width:100%;padding:16px;background:linear-gradient(135deg,var(--green),#047857);color:#fff;border:none;border-radius:14px;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 4px 20px rgba(5,150,105,.3);transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.btn-pagar:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(5,150,105,.4);}
+.btn-pagar:disabled{opacity:.6;transform:none;cursor:not-allowed;}
+
+/* Sucesso */
+.sucesso{display:none;text-align:center;padding:40px 20px;}
+.sucesso .icon{font-size:64px;margin-bottom:16px;}
+.sucesso h2{font-size:22px;font-weight:800;margin-bottom:8px;}
+.sucesso p{color:var(--muted);font-size:14px;line-height:1.6;margin-bottom:24px;}
+.btn-voltar{display:inline-block;padding:14px 32px;background:var(--accent);color:#fff;border-radius:12px;text-decoration:none;font-weight:700;font-size:15px;}
+
+/* Segurança */
+.seguranca{text-align:center;font-size:12px;color:var(--muted);margin-top:16px;display:flex;align-items:center;justify-content:center;gap:6px;}
+
+/* Loading */
+.spinner{width:20px;height:20px;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#1e2433;color:#fff;padding:12px 20px;border-radius:12px;font-size:13px;z-index:999;transition:transform .3s;white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="brand">
+    <span class="a">Ensin</span><span class="b">aprende</span><span class="c">+</span>
+  </div>
+  <a href="/" class="back-btn">← Voltar</a>
+</div>
+
+<div class="main">
+
+  <!-- SUCESSO -->
+  <div class="sucesso" id="telaSuccesso">
+    <div class="icon">🎉</div>
+    <h2>Pagamento confirmado!</h2>
+    <p>Seu plano Professor foi ativado com sucesso.<br>Agora você tem acesso ilimitado a planos de aula, avaliações e muito mais!</p>
+    <a href="/" class="btn-voltar">Começar a usar →</a>
+  </div>
+
+  <!-- CHECKOUT -->
+  <div id="telaCheckout">
+
+    <h2 style="font-size:22px;font-weight:800;margin-bottom:6px;">Assinar Plano Professor</h2>
+    <p style="color:var(--muted);font-size:14px;margin-bottom:20px;">Planos de aula e avaliações ilimitados com IA</p>
+
+    <!-- Benefícios -->
+    <div class="beneficios">
+      <h3>O que está incluído</h3>
+      <div class="beneficio">✅ Planos de aula ilimitados com IA</div>
+      <div class="beneficio">✅ Avaliações ilimitadas com QR Code</div>
+      <div class="beneficio">✅ Material para alunos AEE</div>
+      <div class="beneficio">✅ Correção de provas pelo celular</div>
+      <div class="beneficio">✅ Export PDF profissional</div>
+      <div class="beneficio">✅ Todos os componentes curriculares (1º ao 9º + EM)</div>
+    </div>
+
+    <!-- Planos -->
+    <div class="planos">
+      <div class="plano-card" id="planoMensal" onclick="selecionarPlano('mensal')">
+        <div class="plano-nome">Mensal</div>
+        <div class="plano-valor">R$ 9,90<span>/mês</span></div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;">Cancele quando quiser</div>
+      </div>
+      <div class="plano-card popular selected" id="planoAnual" onclick="selecionarPlano('anual')">
+        <div class="plano-nome">Anual</div>
+        <div class="plano-valor">R$ 109<span>/ano</span></div>
+        <div class="plano-economia">💰 Economize R$ 9,80</div>
+      </div>
+    </div>
+
+    <!-- Dados pessoais -->
+    <div class="form-card">
+      <h3>Seus dados</h3>
+      <div class="field">
+        <label>Nome completo</label>
+        <input type="text" id="pagNome" placeholder="Professor(a) João Silva">
+      </div>
+      <div class="field">
+        <label>E-mail</label>
+        <input type="email" id="pagEmail" placeholder="seu@email.com">
+      </div>
+      <div class="field">
+        <label>CPF</label>
+        <input type="text" id="pagCpf" placeholder="000.000.000-00" maxlength="14" oninput="mascaraCpf(this)">
+      </div>
+    </div>
+
+    <!-- Método de pagamento -->
+    <div class="form-card">
+      <h3>Forma de pagamento</h3>
+      <div class="metodos">
+        <div class="metodo-btn selected" id="metPix" onclick="selecionarMetodo('pix')">
+          <span class="icon">📱</span>
+          <span class="label">PIX</span>
+        </div>
+        <div class="metodo-btn" id="metBoleto" onclick="selecionarMetodo('boleto')">
+          <span class="icon">🧾</span>
+          <span class="label">Boleto</span>
+        </div>
+        <div class="metodo-btn" id="metCartao" onclick="selecionarMetodo('cartao')">
+          <span class="icon">💳</span>
+          <span class="label">Cartão</span>
+        </div>
+      </div>
+
+      <!-- PIX info -->
+      <div id="pixInfo" style="display:block;">
+        <div style="background:rgba(5,150,105,.08);border-radius:10px;padding:12px 14px;font-size:13px;color:#059669;">
+          ✅ Aprovação imediata após o pagamento
+        </div>
+      </div>
+
+      <!-- Boleto info -->
+      <div id="boletoInfo">
+        <div style="background:rgba(217,119,6,.08);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--orange);">
+          ⏱ Aprovação em até 3 dias úteis após pagamento
+        </div>
+      </div>
+
+      <!-- Cartão form -->
+      <div id="cardForm">
+        <div class="field" style="margin-top:14px;">
+          <label>Número do cartão</label>
+          <div id="cardNumber" style="border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;background:#fff;"></div>
+        </div>
+        <div class="grid2">
+          <div class="field">
+            <label>Validade</label>
+            <div id="cardExpiration" style="border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;background:#fff;"></div>
+          </div>
+          <div class="field">
+            <label>CVV</label>
+            <div id="cardCvv" style="border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;background:#fff;"></div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Nome no cartão</label>
+          <input type="text" id="cardHolder" placeholder="Como está no cartão">
+        </div>
+        <div class="field">
+          <label>Parcelas</label>
+          <select id="parcelas" style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;outline:none;">
+            <option value="1">1x sem juros</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- PIX QR Code (após gerar) -->
+      <div id="pixQrContainer" style="display:none;" class="pix-container">
+        <p style="font-size:14px;color:var(--text);margin-bottom:16px;font-weight:600;">Escaneie o QR Code ou copie o código:</p>
+        <div class="pix-qr" id="pixQrImg"></div>
+        <div class="pix-code" id="pixCode"></div>
+        <button class="copy-btn" onclick="copiarPix()">📋 Copiar código PIX</button>
+        <p style="font-size:12px;color:var(--muted);margin-top:12px;">Aguardando confirmação do pagamento...</p>
+        <div id="pixStatus" style="margin-top:12px;"></div>
+      </div>
+
+      <!-- Boleto URL (após gerar) -->
+      <div id="boletoContainer" style="display:none;text-align:center;padding:20px;">
+        <p style="font-size:14px;margin-bottom:16px;">Seu boleto foi gerado!</p>
+        <a id="boletoLink" href="#" target="_blank" style="display:inline-block;padding:14px 24px;background:var(--orange);color:#fff;border-radius:12px;text-decoration:none;font-weight:700;">📄 Abrir boleto</a>
+        <p style="font-size:12px;color:var(--muted);margin-top:12px;">Vencimento em 3 dias úteis</p>
+      </div>
+    </div>
+
+    <button class="btn-pagar" id="btnPagar" onclick="pagar()">
+      🔒 Pagar agora
+    </button>
+
+    <div class="seguranca">
+      🔒 Pagamento 100% seguro · Mercado Pago
+    </div>
+
+  </div><!-- /telaCheckout -->
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPA_URL = 'https://lgugjikghdelbqlxmhqd.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxndWdqaWtnaGRlbGJxbHhtaHFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIxMjg4NzUsImV4cCI6MjA4NzcwNDg3NX0.WS9WTMwseWEKZHP8N4th3qfnrdaNCu2Ii2q-yadiU7E';
+var supabase = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+
+var planoSelecionado = 'anual';
+var metodoSelecionado = 'pix';
+var mpInstance = null;
+var cardFormInstance = null;
+var pixPaymentId = null;
+var pixPollingInterval = null;
+
+// Init MP
+window.addEventListener('load', async () => {
+  mpInstance = new MercadoPago('TEST-94589ee5-26c7-4bf7-9dd1-04a2c477eeee', { locale: 'pt-BR' });
+
+  // Pre-fill email from session
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session) {
+    document.getElementById('pagEmail').value = session.user.email;
+    // Get name from perfil
+    const { data: perfil } = await supabase.from('perfis').select('nome,plano').eq('id', session.user.id).single();
+    if (perfil?.nome) document.getElementById('pagNome').value = perfil.nome;
+    if (perfil?.plano === 'professor') {
+      // Already subscribed
+      document.getElementById('telaSuccesso').style.display = 'block';
+      document.getElementById('telaCheckout').style.display = 'none';
+    }
+  }
+
+  // Check URL params for plan
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('plano') === 'mensal') selecionarPlano('mensal');
+});
+
+function selecionarPlano(plano) {
+  planoSelecionado = plano;
+  document.getElementById('planoMensal').classList.toggle('selected', plano === 'mensal');
+  document.getElementById('planoAnual').classList.toggle('selected', plano === 'anual');
+}
+
+function selecionarMetodo(metodo) {
+  metodoSelecionado = metodo;
+  ['pix','boleto','cartao'].forEach(m => {
+    document.getElementById('met' + m.charAt(0).toUpperCase() + m.slice(1)).classList.toggle('selected', m === metodo);
+  });
+  document.getElementById('pixInfo').style.display = metodo === 'pix' ? 'block' : 'none';
+  document.getElementById('boletoInfo').style.display = metodo === 'boleto' ? 'block' : 'none';
+  document.getElementById('cardForm').style.display = metodo === 'cartao' ? 'block' : 'none';
+
+  // Inicializa campos de cartão
+  if (metodo === 'cartao' && !cardFormInstance) {
+    initCardForm();
+  }
+}
+
+function initCardForm() {
+  cardFormInstance = mpInstance.cardForm({
+    amount: String(planoSelecionado === 'anual' ? 109.00 : 9.90),
+    iframe: true,
+    form: {
+      id: 'cardFormMP',
+      cardholderName: { id: 'cardHolder', placeholder: 'Nome no cartão' },
+      cardholderEmail: { id: 'pagEmail' },
+      cardNumber: { id: 'cardNumber', placeholder: '0000 0000 0000 0000' },
+      cardExpirationMonth: { id: 'cardExpiration', placeholder: 'MM/AA' },
+      cardExpirationYear: { id: 'cardExpiration' },
+      securityCode: { id: 'cardCvv', placeholder: 'CVV' },
+      installments: { id: 'parcelas' },
+    },
+    callbacks: {
+      onFormMounted: err => { if (err) console.warn('Card form error:', err); },
+    }
+  });
+}
+
+async function pagar() {
+  const nome = document.getElementById('pagNome').value.trim();
+  const email = document.getElementById('pagEmail').value.trim();
+  const cpf = document.getElementById('pagCpf').value.replace(/\D/g,'');
+
+  if (!nome || !email) { showToast('Preencha nome e e-mail'); return; }
+  if (cpf.length !== 11) { showToast('CPF inválido'); return; }
+
+  const btn = document.getElementById('btnPagar');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> Processando...';
+
+  try {
+    if (metodoSelecionado === 'pix') {
+      await pagarPix(nome, email, cpf);
+    } else if (metodoSelecionado === 'boleto') {
+      await pagarBoleto(nome, email, cpf);
+    } else {
+      await pagarCartao(nome, email, cpf);
+    }
+  } catch(e) {
+    showToast('Erro: ' + e.message);
+    btn.disabled = false;
+    btn.innerHTML = '🔒 Pagar agora';
+  }
+}
+
+async function pagarPix(nome, email, cpf) {
+  const res = await fetch('/api/criar-pagamento', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      plano: planoSelecionado, email, nome,
+      cpf, tipo_pagamento: 'pix'
+    })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Erro ao gerar PIX');
+
+  pixPaymentId = data.id;
+  document.getElementById('pixQrImg').innerHTML = data.pix_qr_code_base64
+    ? `<img src="data:image/png;base64,${data.pix_qr_code_base64}" style="width:100%;height:100%;">`
+    : '<div style="padding:20px;color:#999;font-size:12px;">QR Code não disponível em testes</div>';
+  document.getElementById('pixCode').textContent = data.pix_qr_code || 'Código disponível em produção';
+  document.getElementById('pixQrContainer').style.display = 'block';
+  document.getElementById('pixInfo').style.display = 'none';
+  document.getElementById('btnPagar').style.display = 'none';
+
+  // Polling para verificar pagamento
+  pixPollingInterval = setInterval(() => verificarPixPago(email), 5000);
+}
+
+async function verificarPixPago(email) {
+  if (!pixPaymentId) return;
+  try {
+    const res = await fetch(`/api/verificar-pagamento?payment_id=${pixPaymentId}&email=${encodeURIComponent(email)}&plano=${planoSelecionado}`);
+    const data = await res.json();
+    if (data.approved) {
+      clearInterval(pixPollingInterval);
+      mostrarSucesso();
+    } else {
+      document.getElementById('pixStatus').innerHTML = `<span style="font-size:12px;color:var(--muted);">Status: ${data.status}</span>`;
+    }
+  } catch(e) {}
+}
+
+async function pagarBoleto(nome, email, cpf) {
+  const res = await fetch('/api/criar-pagamento', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      plano: planoSelecionado, email, nome,
+      cpf, tipo_pagamento: 'bolbradesco'
+    })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Erro ao gerar boleto');
+
+  document.getElementById('boletoLink').href = data.boleto_url || '#';
+  document.getElementById('boletoContainer').style.display = 'block';
+  document.getElementById('boletoInfo').style.display = 'none';
+  document.getElementById('btnPagar').style.display = 'none';
+  if (data.boleto_url) window.open(data.boleto_url, '_blank');
+}
+
+async function pagarCartao(nome, email, cpf) {
+  // Obtém token do cartão via SDK do MP
+  const token = await cardFormInstance.getCardFormData();
+  if (!token?.token) throw new Error('Erro ao processar cartão');
+
+  const res = await fetch('/api/criar-pagamento', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      plano: planoSelecionado, email, nome, cpf,
+      tipo_pagamento: token.paymentMethodId,
+      token: token.token,
+      installments: parseInt(document.getElementById('parcelas').value),
+      issuer_id: token.issuerId,
+    })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Pagamento recusado');
+  if (data.status === 'approved') mostrarSucesso();
+  else throw new Error('Pagamento não aprovado: ' + data.status_detail);
+}
+
+function mostrarSucesso() {
+  document.getElementById('telaCheckout').style.display = 'none';
+  document.getElementById('telaSuccesso').style.display = 'block';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function copiarPix() {
+  const code = document.getElementById('pixCode').textContent;
+  navigator.clipboard.writeText(code).then(() => showToast('Código PIX copiado!'));
+}
+
+function mascaraCpf(el) {
+  let v = el.value.replace(/\D/g,'');
+  if (v.length > 11) v = v.slice(0,11);
+  v = v.replace(/(\d{3})(\d)/,'$1.$2');
+  v = v.replace(/(\d{3})(\d)/,'$1.$2');
+  v = v.replace(/(\d{3})(\d{1,2})$/,'$1-$2');
+  el.value = v;
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
