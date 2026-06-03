@@ -164,7 +164,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <div class="seg">
       <div class="brand">
         <div>
-          <strong><span style="color:#fff">Ensina</span><span style="color:#fde68a">prende</span><span style="color:#fff">+</span></strong><br>
+          <strong><span style="color:#fff">Ensin</span><span style="color:#fde68a">aprende</span><span style="color:#fff">+</span></strong><br>
           <span>Gerador de Avaliações</span>
         </div>
       </div>
