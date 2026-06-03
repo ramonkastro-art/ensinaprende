@@ -1,8 +1,8 @@
 {
-  "name": "Aprende+ — Apoio Pedagógico",
-  "short_name": "Aprende+",
-  "description": "Apoio pedagógico para professores da Rede Municipal de Vacaria-RS",
-  "start_url": "/",
+  "name": "Ensinaprende+",
+  "short_name": "Ensinaprende+",
+  "description": "Planos de Aula com Inteligência Artificial",
+  "start_url": "https://ensinaprende.com.br",
   "display": "standalone",
   "background_color": "#f5f3ee",
   "theme_color": "#2563eb",

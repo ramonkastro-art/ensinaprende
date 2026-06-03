@@ -98,9 +98,9 @@ module.exports = async function handler(req, res) {
   const html = '<!DOCTYPE html><html lang="pt-BR"><head>' +
     '<meta charset="UTF-8">' +
     '<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">' +
-    '<title>Aprende+ | Corrigir Prova</title>' +
+    '<title>Ensinensinaprende+ | Corrigir Prova</title>' +
     '<style>' + css + '</style></head><body>' +
-    '<div class="hdr"><div class="h1"><b>APRENDE+</b><span>Corrigir Prova</span></div>' +
+    '<div class="hdr"><div class="h1"><b>ENSINAPRENDE+</b><span>Corrigir Prova</span></div>' +
     '<div class="h2"></div><div class="h3"><a href="/avaliacao">Inicio</a></div></div>' +
     '<div class="main">' +
     '<div id="ld" class="ld"><div class="sp"></div><p style="color:var(--muted);font-size:14px;">Carregando...</p></div>' +

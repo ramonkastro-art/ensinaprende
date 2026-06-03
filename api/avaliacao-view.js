@@ -5,7 +5,7 @@ module.exports = async function handler(req, res) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Aprende+ | Gerador de Avaliações</title>
+<title>Ensinensinaprende+ | Gerador de Avaliações</title>
 <link rel="manifest" href="/manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -164,7 +164,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <div class="seg">
       <div class="brand">
         <div>
-          <strong>APRENDE+</strong><br>
+          <strong><span style="color:#fff">Ensina</span><span style="color:#fde68a">prende</span><span style="color:#fff">+</span></strong><br>
           <span>Gerador de Avaliações</span>
         </div>
       </div>
@@ -703,7 +703,7 @@ async function exportarPDF() {
     doc.setFillColor(214,120,40);  doc.rect(third*2,0,third+1,isFirst?20:10,'F');
     if (isFirst) {
       doc.setFontSize(12); doc.setFont('helvetica','bold'); doc.setTextColor(255,255,255);
-      doc.text('APRENDE+ · AVALIAÇÃO', M, 8);
+      doc.text('ENSINAPRENDE+ · AVALIAÇÃO', M, 8);
       doc.setFontSize(8); doc.setFont('helvetica','normal');
       doc.text(\`\${c.comp} · \${c.ano}\${c.turma?' · '+c.turma:''} · \${c.qtd} questões · Nível: \${c.nivel}\`, M, 18);
       doc.setFontSize(8);
@@ -711,7 +711,7 @@ async function exportarPDF() {
       return 24;
     } else {
       doc.setFontSize(7); doc.setFont('helvetica','normal'); doc.setTextColor(255,255,255);
-      doc.text(\`APRENDE+ · \${c.comp} · \${c.ano}\`, M, 7);
+      doc.text(\`ENSINAPRENDE+ · \${c.comp} · \${c.ano}\`, M, 7);
       return 14;
     }
   }
@@ -722,7 +722,7 @@ async function exportarPDF() {
     doc.setDrawColor(220,225,235); doc.setLineWidth(0.3);
     doc.line(M, PAGE_H-FOOTER_H, W-M, PAGE_H-FOOTER_H);
     doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(140,148,170);
-    doc.text(\`Aprende+ · Educação Básica · \${c.geradaEm}\`, M, PAGE_H-FOOTER_H+6);
+    doc.text(\`Ensinensinaprende+ · Educação Básica · \${c.geradaEm}\`, M, PAGE_H-FOOTER_H+6);
     doc.text(\`Página \${pg}\`, W-M, PAGE_H-FOOTER_H+6, {align:'right'});
   }
 
@@ -786,7 +786,7 @@ async function exportarPDF() {
   const qrIdParaUsar = avaliacaoId || ('LOCAL-' + questoes.map(q=>q.gabarito).join(''));
   {
     try {
-      const qrUrl = 'https://aprendemaisvac.vercel.app/corrigir?id=' + qrIdParaUsar;
+      const qrUrl = 'https://ensinaprende.com.br/corrigir?id=' + qrIdParaUsar;
       const qrDiv = document.createElement('div');
       qrDiv.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
       document.body.appendChild(qrDiv);
