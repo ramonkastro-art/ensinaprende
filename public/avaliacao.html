@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 :root{
@@ -355,6 +356,19 @@ async function gerarAvaliacao() {
   if (!comp) { showToast('Selecione o componente'); return; }
   if (!conteudo) { showToast('Descreva o conteúdo a ser avaliado'); return; }
 
+  // Verifica limite freemium
+  try {
+    const supa = window.supabase.createClient('https://lgugjikghdelbqlxmhqd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxndWdqaWtnaGRlbGJxbHhtaHFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIxMjg4NzUsImV4cCI6MjA4NzcwNDg3NX0.WS9WTMwseWEKZHP8N4th3qfnrdaNCu2Ii2q-yadiU7E');
+    const { data: { session } } = await supa.auth.getSession();
+    if (session) {
+      const { data: perfil } = await supa.from('perfis').select('plano,usos_avaliacao').eq('id', session.user.id).single();
+      if (perfil && perfil.plano === 'gratuito' && (perfil.usos_avaliacao || 0) >= 1) {
+        alert('Você atingiu o limite de 1 avaliação do plano gratuito.\n\nAcesse o site principal para assinar o plano Professor (R$ 9,90/mês) e gerar avaliações ilimitadas!');
+        return;
+      }
+    }
+  } catch(e) { /* ignora erro de auth */ }
+
   document.getElementById('btnGerar').disabled = true;
   document.getElementById('loading').style.display = 'block';
   document.getElementById('questoesContainer').style.display = 'none';
@@ -449,8 +463,18 @@ Gere exatamente ${qtd} questões seguindo as regras. Responda APENAS com o JSON,
     };
 
     renderizarQuestoes();
-    // Salva no Supabase em background e armazena o ID
     salvarAvaliacao(parsed.questoes, avaliacaoAtual.config);
+    // Incrementa uso
+    try {
+      const supa = window.supabase.createClient('https://lgugjikghdelbqlxmhqd.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxndWdqaWtnaGRlbGJxbHhtaHFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIxMjg4NzUsImV4cCI6MjA4NzcwNDg3NX0.WS9WTMwseWEKZHP8N4th3qfnrdaNCu2Ii2q-yadiU7E');
+      const { data: { session } } = await supa.auth.getSession();
+      if (session) {
+        const { data: p } = await supa.from('perfis').select('plano,usos_avaliacao').eq('id', session.user.id).single();
+        if (p && p.plano === 'gratuito') {
+          await supa.from('perfis').update({ usos_avaliacao: (p.usos_avaliacao || 0) + 1 }).eq('id', session.user.id);
+        }
+      }
+    } catch(e) {}
 
   } catch(err) {
     showToast('Erro: ' + err.message);

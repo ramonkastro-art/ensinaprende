@@ -234,8 +234,86 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--border);letter-
   .tab-btn,.checkbox-item,.btn-generate,.btn-action{-webkit-tap-highlight-color:transparent;}
 }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
+
+<!-- ══ AUTH OVERLAY ══ -->
+<div id="authOverlay" style="display:block;position:fixed;inset:0;z-index:1000;background:var(--bg);overflow-y:auto;">
+  <div style="max-width:420px;margin:0 auto;padding:40px 20px;">
+    <div style="text-align:center;margin-bottom:32px;">
+      <div style="font-size:36px;margin-bottom:8px;">📚</div>
+      <h1 style="font-size:24px;font-weight:700;color:var(--text);">Aprende+</h1>
+      <p style="color:var(--muted);font-size:14px;">Planos de Aula com Inteligência Artificial</p>
+    </div>
+
+    <!-- Tabs login/cadastro -->
+    <div style="display:flex;background:var(--surface2);border-radius:12px;padding:4px;margin-bottom:24px;">
+      <button id="tabLoginBtn" onclick="authTab('login')" style="flex:1;padding:10px;border:none;border-radius:9px;background:var(--surface);font-family:inherit;font-size:14px;font-weight:600;color:var(--accent);cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.08);">Entrar</button>
+      <button id="tabCadastroBtn" onclick="authTab('cadastro')" style="flex:1;padding:10px;border:none;border-radius:9px;background:transparent;font-family:inherit;font-size:14px;font-weight:500;color:var(--muted);cursor:pointer;">Cadastrar</button>
+    </div>
+
+    <!-- Login -->
+    <div id="formLogin">
+      <div style="margin-bottom:14px;">
+        <label style="font-size:13px;font-weight:600;color:var(--muted);display:block;margin-bottom:6px;">E-mail</label>
+        <input id="loginEmail" type="email" placeholder="seu@email.com" style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;outline:none;">
+      </div>
+      <div style="margin-bottom:20px;">
+        <label style="font-size:13px;font-weight:600;color:var(--muted);display:block;margin-bottom:6px;">Senha</label>
+        <input id="loginSenha" type="password" placeholder="••••••••" style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;outline:none;" onkeydown="if(event.key==='Enter')fazerLogin()">
+      </div>
+      <button onclick="fazerLogin()" id="btnLogin" style="width:100%;padding:14px;background:linear-gradient(135deg,var(--accent),#1d4ed8);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;">Entrar</button>
+      <p style="text-align:center;margin-top:14px;font-size:13px;color:var(--muted);">
+        <a href="#" onclick="esqueceuSenha()" style="color:var(--accent);text-decoration:none;">Esqueceu a senha?</a>
+      </p>
+    </div>
+
+    <!-- Cadastro -->
+    <div id="formCadastro" style="display:none;">
+      <div style="margin-bottom:14px;">
+        <label style="font-size:13px;font-weight:600;color:var(--muted);display:block;margin-bottom:6px;">Nome completo</label>
+        <input id="cadNome" type="text" placeholder="Professor(a) João Silva" style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;outline:none;">
+      </div>
+      <div style="margin-bottom:14px;">
+        <label style="font-size:13px;font-weight:600;color:var(--muted);display:block;margin-bottom:6px;">E-mail</label>
+        <input id="cadEmail" type="email" placeholder="seu@email.com" style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;outline:none;">
+      </div>
+      <div style="margin-bottom:20px;">
+        <label style="font-size:13px;font-weight:600;color:var(--muted);display:block;margin-bottom:6px;">Senha</label>
+        <input id="cadSenha" type="password" placeholder="mínimo 6 caracteres" style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;outline:none;" onkeydown="if(event.key==='Enter')fazerCadastro()">
+      </div>
+      <button onclick="fazerCadastro()" id="btnCadastro" style="width:100%;padding:14px;background:linear-gradient(135deg,var(--accent),#1d4ed8);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;">Criar conta grátis</button>
+      <p style="text-align:center;margin-top:12px;font-size:12px;color:var(--muted);line-height:1.5;">
+        Plano gratuito: 2 planos de aula + 1 avaliação.<br>Sem cartão de crédito.
+      </p>
+    </div>
+
+    <div id="authMsg" style="display:none;margin-top:14px;padding:12px 16px;border-radius:10px;font-size:13px;text-align:center;"></div>
+  </div>
+</div>
+
+<!-- ══ UPGRADE OVERLAY ══ -->
+<div id="upgradeOverlay" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:var(--surface);border-radius:20px;padding:32px 24px;max-width:380px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.2);">
+    <div style="font-size:48px;margin-bottom:12px;">🚀</div>
+    <h2 style="font-size:20px;font-weight:700;margin-bottom:8px;">Limite do plano gratuito</h2>
+    <p style="color:var(--muted);font-size:14px;margin-bottom:24px;line-height:1.6;">Você usou todos os seus créditos gratuitos.<br>Assine para continuar gerando planos e avaliações ilimitados.</p>
+    <div style="background:linear-gradient(135deg,#f0f9ff,#e0f2fe);border-radius:14px;padding:20px;margin-bottom:20px;">
+      <div style="font-size:13px;color:#0369a1;font-weight:600;margin-bottom:4px;">PLANO PROFESSOR</div>
+      <div style="font-size:32px;font-weight:700;color:var(--text);">R$ 9,90<span style="font-size:14px;font-weight:400;color:var(--muted);">/mês</span></div>
+      <div style="font-size:12px;color:var(--muted);margin-top:4px;">ou R$ 109,00/ano · economize 8%</div>
+      <ul style="text-align:left;margin-top:16px;font-size:13px;color:var(--text);list-style:none;padding:0;display:flex;flex-direction:column;gap:6px;">
+        <li>✅ Planos de aula ilimitados</li>
+        <li>✅ Avaliações ilimitadas</li>
+        <li>✅ Correção pelo celular (QR Code)</li>
+        <li>✅ PDF profissional com IA</li>
+      </ul>
+    </div>
+    <button onclick="irParaPagamento()" style="width:100%;padding:14px;background:linear-gradient(135deg,#059669,#047857);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;">Assinar agora</button>
+    <button onclick="fecharUpgrade()" style="width:100%;padding:10px;background:none;border:none;font-family:inherit;font-size:13px;color:var(--muted);cursor:pointer;">Continuar no plano gratuito</button>
+  </div>
+</div>
 
 <header>
   <div class="logo-icon" style="background:none;border-radius:0;width:48px;height:48px;overflow:hidden;">
@@ -246,6 +324,19 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--border);letter-
     <div class="logo-sub">Planos de Aula · Educação Básica</div>
   </div>
 </header>
+<!-- Barra de uso do usuário -->
+<div id="userBar" style="display:none;background:var(--surface);border-bottom:1px solid var(--border);padding:8px 16px;">
+  <div style="max-width:700px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+    <div style="font-size:13px;color:var(--muted);">
+      Olá, <strong id="userNome" style="color:var(--text);"></strong>
+      <span id="planoBadge" style="margin-left:8px;background:rgba(37,99,235,.1);color:var(--accent);border-radius:6px;padding:2px 8px;font-size:11px;font-weight:700;"></span>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div id="usageBar" style="font-size:12px;color:var(--muted);"></div>
+      <button onclick="sair()" style="font-size:12px;color:var(--muted);background:none;border:none;cursor:pointer;font-family:inherit;">Sair</button>
+    </div>
+  </div>
+</div>
 
 <div class="main">
   <div class="hero">
@@ -429,6 +520,203 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--border);letter-
 </footer>
 
 <script>
+/* ── Supabase Auth ── */
+var SUPA_URL = 'https://lgugjikghdelbqlxmhqd.supabase.co';
+var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxndWdqaWtnaGRlbGJxbHhtaHFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIxMjg4NzUsImV4cCI6MjA4NzcwNDg3NX0.WS9WTMwseWEKZHP8N4th3qfnrdaNCu2Ii2q-yadiU7E';
+var supabase = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+
+var LIMITE_PLANO = 2;
+var LIMITE_AVALIACAO = 1;
+
+let usuarioAtual = null;
+let perfilAtual = null;
+
+async function initAuth() {
+  // Garante que o SDK carregou
+  if (!window.supabase) {
+    setTimeout(initAuth, 200);
+    return;
+  }
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session) {
+    usuarioAtual = session.user;
+    await carregarPerfil();
+    mostrarApp();
+  } else {
+    document.getElementById('authOverlay').style.display = 'block';
+  }
+  supabase.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN' && session) {
+      usuarioAtual = session.user;
+      await carregarPerfil();
+      mostrarApp();
+    } else if (event === 'SIGNED_OUT') {
+      usuarioAtual = null;
+      perfilAtual = null;
+      document.getElementById('authOverlay').style.display = 'block';
+      document.getElementById('userBar').style.display = 'none';
+    }
+  });
+}
+
+async function carregarPerfil() {
+  const { data } = await supabase.from('perfis').select('*').eq('id', usuarioAtual.id).single();
+  perfilAtual = data;
+}
+
+function mostrarApp() {
+  document.getElementById('authOverlay').style.display = 'none';
+  const bar = document.getElementById('userBar');
+  bar.style.display = 'block';
+  const nome = perfilAtual?.nome || usuarioAtual?.email?.split('@')[0] || 'Professor';
+  document.getElementById('userNome').textContent = nome;
+  const plano = perfilAtual?.plano || 'gratuito';
+  document.getElementById('planoBadge').textContent = plano === 'gratuito' ? 'Gratuito' : 'Professor ⭐';
+  atualizarUsageBar();
+}
+
+function atualizarUsageBar() {
+  if (!perfilAtual) return;
+  const plano = perfilAtual.plano || 'gratuito';
+  if (plano !== 'gratuito') {
+    document.getElementById('usageBar').innerHTML = '<span style="color:#059669;">✓ Ilimitado</span>';
+    return;
+  }
+  const usosPl = perfilAtual.usos_plano || 0;
+  const usosAv = perfilAtual.usos_avaliacao || 0;
+  document.getElementById('usageBar').innerHTML =
+    `Planos: ${usosPl}/${LIMITE_PLANO} &nbsp;·&nbsp; Avaliações: ${usosAv}/${LIMITE_AVALIACAO}`;
+}
+
+async function verificarLimite(tipo) {
+  await carregarPerfil();
+  if (!perfilAtual) return false;
+  const plano = perfilAtual.plano || 'gratuito';
+  if (plano !== 'gratuito') return true;
+  if (tipo === 'plano' && (perfilAtual.usos_plano || 0) >= LIMITE_PLANO) {
+    mostrarUpgrade(); return false;
+  }
+  if (tipo === 'avaliacao' && (perfilAtual.usos_avaliacao || 0) >= LIMITE_AVALIACAO) {
+    mostrarUpgrade(); return false;
+  }
+  return true;
+}
+
+async function incrementarUso(tipo) {
+  if (!perfilAtual) return;
+  const plano = perfilAtual.plano || 'gratuito';
+  if (plano !== 'gratuito') return;
+  const campo = tipo === 'plano' ? 'usos_plano' : 'usos_avaliacao';
+  const atual = perfilAtual[campo] || 0;
+  await supabase.from('perfis').update({ [campo]: atual + 1 }).eq('id', usuarioAtual.id);
+  perfilAtual[campo] = atual + 1;
+  atualizarUsageBar();
+}
+
+function authTab(tab) {
+  document.getElementById('formLogin').style.display = tab === 'login' ? 'block' : 'none';
+  document.getElementById('formCadastro').style.display = tab === 'cadastro' ? 'block' : 'none';
+  document.getElementById('tabLoginBtn').style.background = tab === 'login' ? 'var(--surface)' : 'transparent';
+  document.getElementById('tabLoginBtn').style.color = tab === 'login' ? 'var(--accent)' : 'var(--muted)';
+  document.getElementById('tabLoginBtn').style.fontWeight = tab === 'login' ? '600' : '500';
+  document.getElementById('tabLoginBtn').style.boxShadow = tab === 'login' ? '0 1px 4px rgba(0,0,0,.08)' : 'none';
+  document.getElementById('tabCadastroBtn').style.background = tab === 'cadastro' ? 'var(--surface)' : 'transparent';
+  document.getElementById('tabCadastroBtn').style.color = tab === 'cadastro' ? 'var(--accent)' : 'var(--muted)';
+  document.getElementById('tabCadastroBtn').style.fontWeight = tab === 'cadastro' ? '600' : '500';
+  document.getElementById('tabCadastroBtn').style.boxShadow = tab === 'cadastro' ? '0 1px 4px rgba(0,0,0,.08)' : 'none';
+  document.getElementById('authMsg').style.display = 'none';
+}
+
+function showAuthMsg(msg, ok) {
+  const el = document.getElementById('authMsg');
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.style.background = ok ? 'rgba(5,150,105,.1)' : 'rgba(220,38,38,.1)';
+  el.style.color = ok ? '#059669' : '#dc2626';
+}
+
+async function fazerLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const senha = document.getElementById('loginSenha').value;
+  if (!email || !senha) { showAuthMsg('Preencha e-mail e senha.', false); return; }
+  const btn = document.getElementById('btnLogin');
+  btn.textContent = 'Entrando...'; btn.disabled = true;
+  const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
+  btn.textContent = 'Entrar'; btn.disabled = false;
+  if (error) {
+    if (error.message.includes('Email not confirmed')) {
+      showAuthMsg('Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada.', false);
+    } else if (error.message.includes('Invalid login')) {
+      showAuthMsg('E-mail ou senha incorretos.', false);
+    } else {
+      showAuthMsg('Erro: ' + error.message, false);
+    }
+  }
+}
+
+async function fazerCadastro() {
+  const nome = document.getElementById('cadNome').value.trim();
+  const email = document.getElementById('cadEmail').value.trim();
+  const senha = document.getElementById('cadSenha').value;
+  if (!nome || !email || !senha) { showAuthMsg('Preencha todos os campos.', false); return; }
+  if (senha.length < 6) { showAuthMsg('Senha deve ter ao menos 6 caracteres.', false); return; }
+  const btn = document.getElementById('btnCadastro');
+  btn.textContent = 'Criando conta...'; btn.disabled = true;
+  const { data, error } = await supabase.auth.signUp({ email, password: senha, options: { data: { nome } } });
+  btn.textContent = 'Criar conta grátis'; btn.disabled = false;
+  if (error) {
+    if (error.message.includes('already registered')) {
+      showAuthMsg('Este e-mail já está cadastrado. Use a aba Entrar.', false);
+    } else {
+      showAuthMsg('Erro: ' + error.message, false);
+    }
+    return;
+  }
+  // Se precisar confirmar e-mail
+  if (data?.user && !data?.session) {
+    showAuthMsg('✅ Conta criada! Verifique seu e-mail para confirmar o cadastro.', true);
+    return;
+  }
+  // Login automático (sem confirmação de e-mail)
+  if (data?.session) {
+    usuarioAtual = data.session.user;
+    await supabase.from('perfis').update({ nome }).eq('id', usuarioAtual.id);
+    await carregarPerfil();
+    mostrarApp();
+  }
+}
+
+async function esqueceuSenha() {
+  const email = document.getElementById('loginEmail').value.trim();
+  if (!email) { showAuthMsg('Digite seu e-mail primeiro.', false); return; }
+  await supabase.auth.resetPasswordForEmail(email);
+  showAuthMsg('E-mail de redefinição enviado!', true);
+}
+
+async function sair() {
+  await supabase.auth.signOut();
+}
+
+function mostrarUpgrade() {
+  document.getElementById('upgradeOverlay').style.display = 'flex';
+}
+function fecharUpgrade() {
+  document.getElementById('upgradeOverlay').style.display = 'none';
+}
+function irParaPagamento() {
+  // Etapa 2 — Mercado Pago
+  showToast('Pagamento em breve! Em implementação.');
+  fecharUpgrade();
+}
+
+// Inicia auth ao carregar
+// Aguarda SDK carregar antes de iniciar auth
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => setTimeout(initAuth, 100));
+} else {
+  setTimeout(initAuth, 100);
+}
+
 /* ── State ── */
 let currentMode = 'manual';
 let uploadedB64 = null, uploadedMime = null;
@@ -632,6 +920,10 @@ async function generate() {
   if (!pagina.trim()) { alert('Por favor, informe o tema ou conteúdo da aula.'); return; }
   if (recursos.length === 0) { alert('Selecione pelo menos um material para gerar.'); return; }
 
+  // Verifica limite freemium
+  const podeGerar = await verificarLimite('plano');
+  if (!podeGerar) return;
+
   // Reset UI
   document.getElementById('formSection').style.display = 'none';
   document.getElementById('errorBox').classList.remove('visible');
@@ -689,6 +981,7 @@ async function generate() {
 
     progressBar.style.width = '100%';
     saveToHistory();
+    await incrementarUso('plano');
     registrarConsulta(document.getElementById('componente').value, document.getElementById('ano').value, document.getElementById('volume').value, document.getElementById('pagina').value, recursos);
     setTimeout(() => document.getElementById('loading').classList.remove('visible'), 400);
 
