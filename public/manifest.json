@@ -1,11 +1,11 @@
 {
-  "name": "Ensinaprende+",
-  "short_name": "Ensinaprende+",
+  "name": "ensinAprende+",
+  "short_name": "ensinAprende+",
   "description": "Planos de Aula com Inteligência Artificial",
   "start_url": "https://ensinaprende.com.br",
   "display": "standalone",
-  "background_color": "#f5f3ee",
-  "theme_color": "#2563eb",
+  "background_color": "#0f2350",
+  "theme_color": "#0f2350",
   "orientation": "portrait-primary",
   "lang": "pt-BR",
   "icons": [
