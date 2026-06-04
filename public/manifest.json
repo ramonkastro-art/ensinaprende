@@ -2,7 +2,7 @@
   "name": "ensinAprende+",
   "short_name": "ensinAprende+",
   "description": "Planos de Aula com Inteligência Artificial",
-  "start_url": "https://ensinaprende.com.br",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#0f2350",
   "theme_color": "#0f2350",
