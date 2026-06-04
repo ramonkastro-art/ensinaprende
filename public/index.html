@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ensinensinaprende+ | Apoio Pedagógico</title>
+<title>ensinAprende+ | Planos de Aula com IA</title>
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#2563eb">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Ensinensinaprende+">
+<meta name="apple-mobile-web-app-title" content="ensinAprende+">
 <link rel="apple-touch-icon" href="/icon-192.png">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,600;0,900;1,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -342,7 +342,7 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--border);letter-
   </div>
 </div>
 
-<header style="visibility:hidden;" id="mainHeader">
+<header id="mainHeader">
   <div class="logo-icon" style="background:none;border-radius:0;width:52px;height:52px;overflow:hidden;">
     <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAADr0lEQVR42u3YW2wUVRjA8f+Z2dn7drtAbUsJTaogqSQIEqyuDaWiRKRiNU3VkGK4iBrFkEiIgmm0VqMxxIQ2xmAoCA82JXItEmsKoqStkFRtEFsjBFxqC93dttu9zO7sjA8m+qSpD223cb7Xk2/O+Z0z3zlnRnhvf9xgGofENA8TYAJMgAkwASbABJiA/zPAMlEPPnhyNz03w7gVmYeLZlPif25C+hETcZ3e/OE22q7cwGlTSAsLqtXBW+VLqSnflPkrsK/lHXa2fkuBL4uUIZgpVJ7sO8po/6npUQPNnT04dYNUNMaoqrOu93OevXaKyov7udH4WGYDjhz/gO5fAyiGTkQ1yA9dY0W4m7DTRyIrm9Q3hzIbcLD9Ano8ia5qDI+MsmrxQnLm3oYuRbH6rCSDP/Hj8e2ZCTjXtoez3X3YgFgkiielUvvqx+jLViPLY+AUKC6dLy/3ZiZg/+lOIsMxREonGIrgn18IgLakEjHDjbDEkbIcnA5JnOs8kHmAo+3d2CUJNZZET+pUly4BIPeB15HuWo7bCNCW7afPyOFSIJBZgNfe2MzNwWEUzeD3gRDzc32sfWLHX+2e+9fTYltBg7wWm9CI/tabWYBPWzuIJ5JEo3EKvG52VK/8u7Cb69n4VZQ6Yz1pVUUgsSAxSLBuUWacxHVvv8C7TV9QU+Hnjjk5IAsGRqP0XB/gylCIoJrE5rAz0+vkVixBxYNl1P+yl+jFNorOFk/9SawoFt5/pYquS1fZ03KG/tExDFnC6bbjctvx2BXUdJr+4AgVy/3ssvxMsusEQoswsK+SvA1HphZwKxzhzb0nGY7EyXY7sFllNASJWBJVS+PzuVhYlM+6h/ysSfcSb9iK7nJhETa0C4cA19S9Qlu311D/SSv5s7xYLDLhSAyPy07xvALuXlDIonlzWHpnIfeWPQ/A4LGXiTc8jSXL/efUaSPYNn5GzurGyQd0tDVSuuk9HDYFIQlG4kk2rLmPl6rKuadsyz/mBbZpcL0L4cmCVBCp+BHyd8YnfxdqOnGeeFJDtsgkkhqFeTNoamz+18EDKCVPgaKCzUB43OiBMwx11E0+4NjX3+N12RHAWEylqnzxuPJyqw8j5c1F0kNgt0I6ivbDgckF7KrdwtX+IYQkGIurZHscPLNq2bjzrY/uxvDOxkjFwOIgffnw5NbAd+0fMRZLIMsSad3AabNSsvLF/9z50PlaBAJDTzGrtD5zPinNvxImwASYABNgAkyACTABJmBc8QfJh15A+podBQAAAABJRU5ErkJggg==" style="width:56px;height:56px;object-fit:contain;" alt="Ensinensinaprende+">
   </div>
@@ -365,7 +365,7 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--border);letter-
   </div>
 </div>
 
-<div class="main" style="visibility:hidden;">
+<div class="main">
   <div class="hero">
     <div class="hero-badge">🏫 Rede de Educação Básica</div>
     <h1><span style="color:#1a3a6b">ensin</span><span style="color:#e8721a">Aprende</span><span style="color:#1a3a6b">+</span><br><em>Planos de Aula com IA</em></h1>
@@ -565,12 +565,16 @@ async function initAuth() {
     setTimeout(initAuth, 200);
     return;
   }
+  // Prevent body scroll while overlay shown
+  document.body.style.overflow = 'hidden';
   const { data: { session } } = await supabase.auth.getSession();
   if (session) {
     usuarioAtual = session.user;
     await carregarPerfil();
     mostrarApp();
   } else {
+    // Show overlay, restore scroll for overlay scrolling
+    document.body.style.overflow = '';
     document.getElementById('authOverlay').style.display = 'block';
   }
   supabase.auth.onAuthStateChange(async (event, session) => {
