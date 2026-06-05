@@ -244,7 +244,7 @@ body.auth-loading {
   overflow: hidden;
 }
 #authOverlay {
-  display: none;
+  display: none !important;
   position: fixed;
   inset: 0;
   z-index: 9999;
@@ -252,7 +252,7 @@ body.auth-loading {
   background: linear-gradient(175deg,#e8f0ff 0%,#f0f4ff 40%,#fff3e8 100%);
 }
 #authOverlay.visible {
-  display: block;
+  display: block !important;
 }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -613,9 +613,17 @@ function mostrarLogin() {
 function mostrarApp() {
   // Remove loading — shows header and main content
   document.body.classList.remove('auth-loading');
-  // Hide login overlay
+  document.body.style.background = '';
+  document.body.style.overflow = '';
+  // Hide login overlay completely
   const overlay = document.getElementById('authOverlay');
-  if (overlay) overlay.classList.remove('visible');
+  if (overlay) {
+    overlay.classList.remove('visible');
+    overlay.style.display = 'none';
+  }
+  // Reset scroll to top of page
+  window.scrollTo(0, 0);
+  document.documentElement.scrollTop = 0;
   // Show user bar
   const bar = document.getElementById('userBar');
   if (bar) bar.style.display = 'block';
