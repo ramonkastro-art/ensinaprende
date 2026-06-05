@@ -233,14 +233,35 @@ footer{text-align:center;padding:24px;font-size:12px;color:var(--border);letter-
   input,select,textarea{font-size:16px;}
   .tab-btn,.checkbox-item,.btn-generate,.btn-action{-webkit-tap-highlight-color:transparent;}
 }
+
+/* ── AUTH STATE ── */
+body.auth-loading #mainHeader,
+body.auth-loading .main,
+body.auth-loading #userBar {
+  display: none !important;
+}
+body.auth-loading {
+  overflow: hidden;
+}
+#authOverlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  overflow-y: auto;
+  background: linear-gradient(175deg,#e8f0ff 0%,#f0f4ff 40%,#fff3e8 100%);
+}
+#authOverlay.visible {
+  display: block;
+}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="icon" href="/favicon.ico">
 </head>
-<body>
+<body class="auth-loading">
 
 <!-- ══ AUTH OVERLAY ══ -->
-<div id="authOverlay" style="display:block;position:fixed;inset:0;z-index:1000;overflow-y:auto;background:linear-gradient(175deg,#e8f0ff 0%,#f0f4ff 40%,#fff3e8 100%);">
+<div id="authOverlay">
   <div style="max-width:460px;margin:0 auto;padding:28px 20px;">
 
     <!-- Logo destaque -->
@@ -560,23 +581,17 @@ let usuarioAtual = null;
 let perfilAtual = null;
 
 async function initAuth() {
-  // Garante que o SDK carregou
-  if (!window.supabase) {
-    setTimeout(initAuth, 200);
-    return;
-  }
-  // Prevent body scroll while overlay shown
-  document.body.style.overflow = 'hidden';
+  if (!window.supabase) { setTimeout(initAuth, 200); return; }
+
   const { data: { session } } = await supabase.auth.getSession();
   if (session) {
     usuarioAtual = session.user;
     await carregarPerfil();
     mostrarApp();
   } else {
-    // Show overlay, restore scroll for overlay scrolling
-    document.body.style.overflow = '';
-    document.getElementById('authOverlay').style.display = 'block';
+    mostrarLogin();
   }
+
   supabase.auth.onAuthStateChange(async (event, session) => {
     if (event === 'SIGNED_IN' && session) {
       usuarioAtual = session.user;
@@ -585,34 +600,42 @@ async function initAuth() {
     } else if (event === 'SIGNED_OUT') {
       usuarioAtual = null;
       perfilAtual = null;
-      document.getElementById('authOverlay').style.display = 'block';
-      document.getElementById('userBar').style.display = 'none';
+      mostrarLogin();
     }
   });
 }
+
+function mostrarLogin() {
+  document.body.classList.add('auth-loading');
+  document.getElementById('authOverlay').classList.add('visible');
+}
+
+function mostrarApp() {
+  // Remove loading — shows header and main content
+  document.body.classList.remove('auth-loading');
+  // Hide login overlay
+  const overlay = document.getElementById('authOverlay');
+  if (overlay) overlay.classList.remove('visible');
+  // Show user bar
+  const bar = document.getElementById('userBar');
+  if (bar) bar.style.display = 'block';
+  // Update user info
+  const nome = perfilAtual?.nome || usuarioAtual?.email?.split('@')[0] || 'Professor';
+  const nomeEl = document.getElementById('userNome');
+  if (nomeEl) nomeEl.textContent = nome;
+  const plano = perfilAtual?.plano || 'gratuito';
+  const badgeEl = document.getElementById('planoBadge');
+  if (badgeEl) badgeEl.textContent = plano === 'gratuito' ? 'Gratuito' : 'Professor ⭐';
+  atualizarUsageBar();
+}
+
 
 async function carregarPerfil() {
   const { data } = await supabase.from('perfis').select('*').eq('id', usuarioAtual.id).single();
   perfilAtual = data;
 }
 
-function mostrarApp() {
-  document.getElementById('authOverlay').style.display = 'none';
-  // Ensure main content is visible
-  const mainEl = document.querySelector('.main');
-  const headerEl = document.querySelector('header');
-  if (mainEl) mainEl.style.visibility = 'visible';
-  if (headerEl) { headerEl.style.visibility = 'visible'; headerEl.id = 'mainHeader'; }
-  document.body.style.background = 'var(--bg, #f4f6fb)';
-  const bar = document.getElementById('userBar');
-  bar.style.display = 'block';
-  bar.style.visibility = 'visible';
-  const nome = perfilAtual?.nome || usuarioAtual?.email?.split('@')[0] || 'Professor';
-  document.getElementById('userNome').textContent = nome;
-  const plano = perfilAtual?.plano || 'gratuito';
-  document.getElementById('planoBadge').textContent = plano === 'gratuito' ? 'Gratuito' : 'Professor ⭐';
-  atualizarUsageBar();
-}
+
 
 function atualizarUsageBar() {
   if (!perfilAtual) return;
