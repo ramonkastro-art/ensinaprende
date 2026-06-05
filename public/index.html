@@ -631,8 +631,28 @@ function mostrarApp() {
 
 
 async function carregarPerfil() {
-  const { data } = await supabase.from('perfis').select('*').eq('id', usuarioAtual.id).single();
-  perfilAtual = data;
+  try {
+    const { data, error } = await supabase.from('perfis').select('*').eq('id', usuarioAtual.id).single();
+    if (error) {
+      console.warn('carregarPerfil error:', error.message);
+      // Create profile if missing
+      if (error.code === 'PGRST116') {
+        const { data: newPerfil } = await supabase.from('perfis').insert([{
+          id: usuarioAtual.id,
+          email: usuarioAtual.email,
+          plano: 'gratuito',
+          usos_plano: 0,
+          usos_avaliacao: 0
+        }]).select().single();
+        perfilAtual = newPerfil;
+      }
+    } else {
+      perfilAtual = data;
+    }
+  } catch(e) {
+    console.warn('carregarPerfil exception:', e.message);
+    perfilAtual = { plano: 'gratuito', usos_plano: 0, usos_avaliacao: 0 };
+  }
 }
 
 
@@ -703,16 +723,23 @@ async function fazerLogin() {
   if (!email || !senha) { showAuthMsg('Preencha e-mail e senha.', false); return; }
   const btn = document.getElementById('btnLogin');
   btn.textContent = 'Entrando...'; btn.disabled = true;
-  const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
+  const { data: loginData, error } = await supabase.auth.signInWithPassword({ email, password: senha });
   btn.textContent = 'Entrar'; btn.disabled = false;
   if (error) {
     if (error.message.includes('Email not confirmed')) {
       showAuthMsg('Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada.', false);
-    } else if (error.message.includes('Invalid login')) {
+    } else if (error.message.includes('Invalid login') || error.message.includes('Invalid credentials')) {
       showAuthMsg('E-mail ou senha incorretos.', false);
     } else {
       showAuthMsg('Erro: ' + error.message, false);
     }
+    return;
+  }
+  // Login OK — força mostrarApp diretamente sem esperar onAuthStateChange
+  if (loginData?.user) {
+    usuarioAtual = loginData.user;
+    await carregarPerfil();
+    mostrarApp();
   }
 }
 
