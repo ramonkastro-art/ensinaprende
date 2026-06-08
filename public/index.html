@@ -250,9 +250,13 @@ body.auth-loading {
   z-index: 9999;
   overflow-y: auto;
   background: linear-gradient(175deg,#e8f0ff 0%,#f0f4ff 40%,#fff3e8 100%);
+  visibility: hidden;
+  pointer-events: none;
 }
 #authOverlay.visible {
   display: block !important;
+  visibility: visible;
+  pointer-events: auto;
 }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -607,7 +611,11 @@ async function initAuth() {
 
 function mostrarLogin() {
   document.body.classList.add('auth-loading');
-  document.getElementById('authOverlay').classList.add('visible');
+  const ov = document.getElementById('authOverlay');
+  ov.style.display = '';
+  ov.style.visibility = '';
+  ov.style.pointerEvents = '';
+  ov.classList.add('visible');
 }
 
 function mostrarApp() {
@@ -620,6 +628,8 @@ function mostrarApp() {
   if (overlay) {
     overlay.classList.remove('visible');
     overlay.style.display = 'none';
+    overlay.style.visibility = 'hidden';
+    overlay.style.pointerEvents = 'none';
   }
   // Reset scroll to top of page
   window.scrollTo(0, 0);
