@@ -590,27 +590,38 @@ var LIMITE_AVALIACAO = 1;
 let usuarioAtual = null;
 let perfilAtual = null;
 
+// Safety flag: evita re-aplicar o estado de "auth-loading" depois que a UI já foi mostrada
+window.__ensinaAppShown = window.__ensinaAppShown || false;
+
 async function initAuth() {
+  // Aguarda o SDK do Supabase estar disponível
   if (!window.supabase) { setTimeout(initAuth, 200); return; }
 
   try {
+    // Pega sessão atual
     const { data: { session } } = await supabase.auth.getSession();
 
     if (session) {
+      // Há sessão: marca usuário e mostra UI imediatamente
       usuarioAtual = session.user;
-      mostrarApp(); // mostra a interface imediatamente
+      mostrarApp(); // mostra a interface antes de carregar perfil
+
+      // Carrega perfil de forma assíncrona (em background)
       carregarPerfil()
         .then(() => atualizarUsageBar())
         .catch(e => console.warn('Falha ao carregar perfil após initAuth:', e));
     } else {
+      // Sem sessão: mostra tela de login
       mostrarLogin();
     }
 
+    // Observador de mudanças de auth (login/logout)
     supabase.auth.onAuthStateChange(async (event, session) => {
       try {
         if (event === 'SIGNED_IN' && session) {
           usuarioAtual = session.user;
-          mostrarApp(); // mostra antes de esperar o perfil
+          mostrarApp(); // garante UI visível imediatamente no sign-in
+
           carregarPerfil()
             .then(() => atualizarUsageBar())
             .catch(e => console.warn('Falha ao carregar perfil no SIGNED_IN:', e));
@@ -623,6 +634,11 @@ async function initAuth() {
         console.warn('Erro no onAuthStateChange handler:', e);
         mostrarLogin();
       }
+      if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => setTimeout(initAuth, 100));
+      } else {
+      setTimeout(initAuth, 100);
+      }
     });
   } catch (e) {
     console.warn('Erro initAuth:', e);
@@ -631,62 +647,127 @@ async function initAuth() {
 }
 
 function mostrarLogin() {
-  document.body.classList.add('auth-loading');
-  const ov = document.getElementById('authOverlay');
-  if (ov) {
-    ov.classList.add('visible');
-    ov.style.display = 'block';
-    ov.style.visibility = 'visible';
-    ov.style.pointerEvents = 'auto';
+  try {
+    // Se a UI já foi exibida, não reaplicar o overlay de login (previne tela branca após login)
+    if (window.__ensinaAppShown) {
+      console.info('mostrarLogin() ignorada porque UI já está visível');
+      return;
+    }
+
+    document.body.classList.add('auth-loading');
+    const ov = document.getElementById('authOverlay');
+    if (ov) {
+      ov.classList.add('visible');
+      ov.style.display = 'block';
+      ov.style.visibility = 'visible';
+      ov.style.pointerEvents = 'auto';
+    }
+
+    // Esconder elementos principais de forma reversível
+    const header = document.getElementById('mainHeader') || document.querySelector('header');
+    const main = document.querySelector('.main') || document.querySelector('main');
+    const userBar = document.getElementById('userBar') || document.querySelector('.user-bar');
+
+    if (header) { header.style.setProperty('visibility','hidden','important'); header.style.setProperty('display','none','important'); }
+    if (main)   { main.style.setProperty('visibility','hidden','important'); main.style.setProperty('display','none','important'); main.style.setProperty('height','0','important'); }
+    if (userBar){ userBar.style.setProperty('visibility','hidden','important'); userBar.style.setProperty('display','none','important'); }
+
+    // Segurança: não permitir que o body fique permanentemente escondido — fallback para remover auth-loading após 10s
+    setTimeout(() => {
+      if (document.body.classList.contains('auth-loading')) {
+        console.warn('mostrarLogin fallback: removendo auth-loading após timeout de segurança');
+        document.body.classList.remove('auth-loading');
+      }
+    }, 10000);
+  } catch (e) {
+    console.warn('mostrarLogin() erro:', e);
   }
-  // oculta elementos principais (por segurança)
-  const header = document.getElementById('mainHeader');
-  const main = document.querySelector('.main');
-  const userBar = document.getElementById('userBar');
-  if (header) header.style.display = 'none';
-  if (main) main.style.display = 'none';
-  if (userBar) { userBar.style.display = 'none'; userBar.style.visibility = 'hidden'; }
 }
 
 function mostrarApp() {
-  // Remove loading — mostra header e main content
-  document.body.classList.remove('auth-loading');
-  document.body.style.background = '';
-  document.body.style.overflow = '';
+  try {
+    // Marca que a UI foi exibida (evita que rota de login a esconda novamente)
+    if (!window.__ensinaAppShown) window.__ensinaAppShown = true;
 
-  // Hide login overlay completely
-  const overlay = document.getElementById('authOverlay');
-  if (overlay) {
-    overlay.classList.remove('visible');
-    overlay.style.display = 'none';
-    overlay.style.visibility = 'hidden';
-    overlay.style.pointerEvents = 'none';
+    // Remove estado global de loading
+    document.body.classList.remove('auth-loading');
+    document.body.style.removeProperty('visibility');
+    document.body.style.removeProperty('overflow');
+    document.documentElement.style.removeProperty('visibility');
+
+    // Função utilitária para forçar visibilidade com !important
+    const setVisibleImportant = (el) => {
+      if (!el) return;
+      try {
+        const cs = getComputedStyle(el);
+        const disp = cs.display === 'none' ? 'block' : cs.display;
+        el.style.setProperty('display', disp, 'important');
+        el.style.setProperty('visibility', 'visible', 'important');
+        el.style.setProperty('opacity', '1', 'important');
+        el.style.setProperty('pointer-events', 'auto', 'important');
+        el.style.setProperty('transform', 'none', 'important');
+        el.style.setProperty('height', 'auto', 'important');
+        el.style.setProperty('min-height', 'calc(var(--vh, 1vh) * 100)', 'important');
+        el.style.setProperty('max-height', 'none', 'important');
+        el.removeAttribute && el.removeAttribute('hidden');
+        if (el.hasAttribute && el.hasAttribute('aria-hidden')) el.removeAttribute('aria-hidden');
+      } catch (e) { /* não trava se algum elemento for estranho */ }
+    };
+
+    // Elementos críticos
+    const header = document.getElementById('mainHeader') || document.querySelector('header');
+    const main = document.querySelector('.main') || document.querySelector('main') || document.getElementById('main');
+    const userBar = document.getElementById('userBar') || document.querySelector('.user-bar');
+
+    [header, main, userBar].forEach(setVisibleImportant);
+
+    // Remove overlay de login se existir
+    const overlay = document.getElementById('authOverlay');
+    if (overlay) {
+      overlay.classList.remove('visible');
+      overlay.style.setProperty('display','none','important');
+      overlay.style.setProperty('visibility','hidden','important');
+      overlay.style.setProperty('pointer-events','none','important');
+    }
+
+    // Se main tem rect 0x0, força dimensões básicas
+    if (main) {
+      const rect = main.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) {
+        main.style.setProperty('width','100%','important');
+        main.style.setProperty('height','auto','important');
+      }
+      // Força visibilidade de filhos importantes (até um limite)
+      Array.from(main.querySelectorAll('*')).slice(0, 1200).forEach(c => {
+        try {
+          const cs = getComputedStyle(c);
+          if (cs.visibility === 'hidden' || cs.opacity === '0' || cs.display === 'none') {
+            c.style.setProperty('visibility','visible','important');
+            c.style.setProperty('opacity','1','important');
+            c.style.setProperty('display', cs.display === 'none' ? 'block' : cs.display, 'important');
+            c.style.setProperty('pointer-events','auto','important');
+          }
+        } catch(e){}
+      });
+    }
+
+    // Remove attributes problemáticos em elementos críticos
+    ['hidden','aria-hidden'].forEach(attr => {
+      [document.body, header, main, userBar, overlay].forEach(el => {
+        if (el && el.hasAttribute && el.hasAttribute(attr)) el.removeAttribute(attr);
+      });
+    });
+
+    // Se alguma rotina tentar reaplicar auth-loading imediatamente, limpamos novamente
+    setTimeout(() => {
+      document.body.classList.remove('auth-loading');
+      if (overlay) overlay.classList.remove('visible');
+    }, 400);
+
+    console.info('mostrarApp() executada — UI forçada visível.');
+  } catch (e) {
+    console.warn('mostrarApp() erro ao restaurar UI:', e);
   }
-
-  // Mostra header e main
-  const header = document.getElementById('mainHeader');
-  const main = document.querySelector('.main');
-  const userBar = document.getElementById('userBar');
-  if (header) header.style.display = 'flex';
-  if (main) main.style.display = 'block';
-  if (userBar) {
-    userBar.style.display = 'block';
-    userBar.style.visibility = 'visible';
-  }
-
-  // Reset scroll to top of page
-  window.scrollTo(0, 0);
-  document.documentElement.scrollTop = 0;
-
-  // Update user info
-  const nome = perfilAtual?.nome || usuarioAtual?.email?.split('@')[0] || 'Professor';
-  const nomeEl = document.getElementById('userNome');
-  if (nomeEl) nomeEl.textContent = nome;
-  const plano = perfilAtual?.plano || 'gratuito';
-  const badgeEl = document.getElementById('planoBadge');
-  if (badgeEl) badgeEl.textContent = plano === 'gratuito' ? 'Gratuito' : 'Professor ⭐';
-
-  atualizarUsageBar();
 }
 
 
