@@ -595,15 +595,13 @@ async function initAuth() {
 
   try {
     const { data: { session } } = await supabase.auth.getSession();
+
     if (session) {
       usuarioAtual = session.user;
-      try {
-        await carregarPerfil();
-      } catch (e) {
-        console.warn('Falha ao carregar perfil no initAuth:', e);
-        perfilAtual = perfilAtual || { plano: 'gratuito', usos_plano: 0, usos_avaliacao: 0 };
-      }
-      mostrarApp();
+      mostrarApp(); // mostra a interface imediatamente
+      carregarPerfil()
+        .then(() => atualizarUsageBar())
+        .catch(e => console.warn('Falha ao carregar perfil após initAuth:', e));
     } else {
       mostrarLogin();
     }
@@ -612,13 +610,10 @@ async function initAuth() {
       try {
         if (event === 'SIGNED_IN' && session) {
           usuarioAtual = session.user;
-          try {
-            await carregarPerfil();
-          } catch (e) {
-            console.warn('Falha ao carregar perfil onAuthStateChange:', e);
-            perfilAtual = perfilAtual || { plano: 'gratuito', usos_plano: 0, usos_avaliacao: 0 };
-          }
-          mostrarApp();
+          mostrarApp(); // mostra antes de esperar o perfil
+          carregarPerfil()
+            .then(() => atualizarUsageBar())
+            .catch(e => console.warn('Falha ao carregar perfil no SIGNED_IN:', e));
         } else if (event === 'SIGNED_OUT') {
           usuarioAtual = null;
           perfilAtual = null;
@@ -696,34 +691,32 @@ function mostrarApp() {
 
 
 async function carregarPerfil() {
+  const fallback = { plano: 'gratuito', usos_plano: 0, usos_avaliacao: 0 };
+
   try {
     if (!usuarioAtual || !usuarioAtual.id) {
-      perfilAtual = { plano: 'gratuito', usos_plano: 0, usos_avaliacao: 0 };
-      return;
+      perfilAtual = fallback;
+      return perfilAtual;
     }
-    const { data, error } = await supabase.from('perfis').select('*').eq('id', usuarioAtual.id).single();
-    if (error) {
-      console.warn('carregarPerfil error:', error.message);
-      // Create profile if missing (PostgREST code may vary)
-      try {
-        const { data: newPerfil } = await supabase.from('perfis').insert([{
-          id: usuarioAtual.id,
-          email: usuarioAtual.email,
-          plano: 'gratuito',
-          usos_plano: 0,
-          usos_avaliacao: 0
-        }]).select().single();
-        perfilAtual = newPerfil;
-      } catch (e) {
-        console.warn('Falha ao criar perfil automaticamente:', e);
-        perfilAtual = { plano: 'gratuito', usos_plano: 0, usos_avaliacao: 0 };
-      }
-    } else {
-      perfilAtual = data || { plano: 'gratuito', usos_plano: 0, usos_avaliacao: 0 };
+
+    const { data, error } = await supabase
+      .from('perfis')
+      .select('*')
+      .eq('id', usuarioAtual.id)
+      .single();
+
+    if (error || !data) {
+      console.warn('carregarPerfil error:', error?.message || 'sem data');
+      perfilAtual = fallback;
+      return perfilAtual;
     }
-  } catch(e) {
+
+    perfilAtual = data;
+    return perfilAtual;
+  } catch (e) {
     console.warn('carregarPerfil exception:', e);
-    perfilAtual = { plano: 'gratuito', usos_plano: 0, usos_avaliacao: 0 };
+    perfilAtual = fallback;
+    return perfilAtual;
   }
 }
 
@@ -798,15 +791,22 @@ function showAuthMsg(msg, ok) {
 }
 
 async function fazerLogin() {
-  const emailEl = document.getElementById('loginEmail');
-  const senhaEl = document.getElementById('loginSenha');
-  const email = emailEl ? emailEl.value.trim() : '';
-  const senha = senhaEl ? senhaEl.value : '';
+  const email = document.getElementById('loginEmail').value.trim();
+  const senha = document.getElementById('loginSenha').value;
   if (!email || !senha) { showAuthMsg('Preencha e-mail e senha.', false); return; }
+
   const btn = document.getElementById('btnLogin');
-  if (btn) { btn.textContent = 'Entrando...'; btn.disabled = true; }
-  const { data: loginData, error } = await supabase.auth.signInWithPassword({ email, password: senha });
-  if (btn) { btn.textContent = 'Entrar'; btn.disabled = false; }
+  btn.textContent = 'Entrando...';
+  btn.disabled = true;
+
+  const { data: loginData, error } = await supabase.auth.signInWithPassword({
+    email,
+    password: senha
+  });
+
+  btn.textContent = 'Entrar';
+  btn.disabled = false;
+
   if (error) {
     if (error.message.includes('Email not confirmed')) {
       showAuthMsg('Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada.', false);
@@ -817,15 +817,13 @@ async function fazerLogin() {
     }
     return;
   }
-  // Login OK — força mostrarApp diretamente sem esperar onAuthStateChange
+
   if (loginData?.user) {
     usuarioAtual = loginData.user;
-    try {
-      await carregarPerfil();
-    } catch (e) {
-      console.warn('Falha ao carregar perfil após login:', e);
-    }
-    mostrarApp();
+    mostrarApp(); // primeiro mostra a interface
+    carregarPerfil()
+      .then(() => atualizarUsageBar())
+      .catch(e => console.warn('Falha ao carregar perfil após login:', e));
   }
 }
 
@@ -833,12 +831,23 @@ async function fazerCadastro() {
   const nome = document.getElementById('cadNome').value.trim();
   const email = document.getElementById('cadEmail').value.trim();
   const senha = document.getElementById('cadSenha').value;
+
   if (!nome || !email || !senha) { showAuthMsg('Preencha todos os campos.', false); return; }
   if (senha.length < 6) { showAuthMsg('Senha deve ter ao menos 6 caracteres.', false); return; }
+
   const btn = document.getElementById('btnCadastro');
-  if (btn) { btn.textContent = 'Criando conta...'; btn.disabled = true; }
-  const { data, error } = await supabase.auth.signUp({ email, password: senha, options: { data: { nome } } });
-  if (btn) { btn.textContent = 'Criar conta grátis'; btn.disabled = false; }
+  btn.textContent = 'Criando conta...';
+  btn.disabled = true;
+
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password: senha,
+    options: { data: { nome } }
+  });
+
+  btn.textContent = 'Criar conta grátis';
+  btn.disabled = false;
+
   if (error) {
     if (error.message.includes('already registered')) {
       showAuthMsg('Este e-mail já está cadastrado. Use a aba Entrar.', false);
@@ -847,19 +856,20 @@ async function fazerCadastro() {
     }
     return;
   }
-  // Se precisar confirmar e-mail
+
   if (data?.user && !data?.session) {
     showAuthMsg('✅ Conta criada! Verifique seu e-mail para confirmar o cadastro.', true);
     return;
   }
-  // Login automático (sem confirmação de e-mail)
+
   if (data?.session) {
     usuarioAtual = data.session.user;
-    try {
-      await supabase.from('perfis').update({ nome }).eq('id', usuarioAtual.id);
-    } catch(e) { /*silencioso*/ }
-    try { await carregarPerfil(); } catch(e){ console.warn(e); }
-    mostrarApp();
+    mostrarApp(); // não espera perfil
+    supabase.from('perfis').update({ nome }).eq('id', usuarioAtual.id)
+      .catch(() => {});
+    carregarPerfil()
+      .then(() => atualizarUsageBar())
+      .catch(e => console.warn('Falha ao carregar perfil após cadastro:', e));
   }
 }
 
