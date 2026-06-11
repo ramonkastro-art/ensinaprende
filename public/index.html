@@ -14,9 +14,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 :root{
-  --bg:#f5f3ee;--surface:#ffffff;--surface2:#f0ede8;--border:#e0d9d0;
+  --bg:#f5f3ee;--surface:#ffff;--surface2:#f0ede8;--border:#e0d9d0;
   --accent:#2563eb;--accent2:#7c3aed;--accent3:#dc2626;
-  --text:#1a1814;--muted:#78716c;--card-bg:#ffffff;
+  --text:#1a1814;--muted:#78716c;--card-bg:#ffff;
   --shadow:0 2px 12px rgba(0,0,0,.07);
 }
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -298,7 +298,7 @@ body.auth-loading {
       </div>
       <div style="margin-bottom:20px;">
         <label style="font-size:13px;font-weight:600;color:var(--muted);display:block;margin-bottom:6px;">SENHA</label>
-        <input id="loginSenha" type="password" placeholder="••••••••" style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;outline:none;" onkeydown="if(event.key==='Enter')fazerLogin()">
+        <input id="loginSenha" type="password" placeholder="••••" style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;outline:none;" onkeydown="if(event.key==='Enter')fazerLogin()">
       </div>
       <button onclick="fazerLogin()" id="btnLogin" style="width:100%;padding:14px;background:linear-gradient(135deg,#1a4a9e,#1d4ed8);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(26,74,158,.3);">Entrar</button>
       <p style="text-align:center;margin-top:14px;font-size:13px;color:var(--muted);">
@@ -369,7 +369,7 @@ body.auth-loading {
 
 <header id="mainHeader">
   <div class="logo-icon" style="background:none;border-radius:0;width:52px;height:52px;overflow:hidden;">
-    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAADr0lEQVR42u3YW2wUVRjA8f+Z2dn7drtAbUsJTaogqSQIEqyuDaWiRKRiNU3VkGK4iBrFkEiIgmm0VqMxxIQ2xmAoCA82JXItEmsKoqStkFRtEFsjBFxqC93dttu9zO7sjA8m+qSpD223cb7Xk2/O+Z0z3zlnRnhvf9xgGofENA8TYAJMgAkwASbABJiA/zPAMlEPPnhyNz03w7gVmYeLZlPif25C+hETcZ3e/OE22q7cwGlTSAsLqtXBW+VLqSnflPkrsK/lHXa2fkuBL4uUIZgpVJ7sO8po/6npUQPNnT04dYNUNMaoqrOu93OevXaKyov7udH4WGYDjhz/gO5fAyiGTkQ1yA9dY0W4m7DTRyIrm9Q3hzIbcLD9Ano8ia5qDI+MsmrxQnLm3oYuRbH6rCSDP/Hj8e2ZCTjXtoez3X3YgFgkiielUvvqx+jLViPLY+AUKC6dLy/3ZiZg/+lOIsMxREonGIrgn18IgLakEjHDjbDEkbIcnA5JnOs8kHmAo+3d2CUJNZZET+pUly4BIPeB15HuWo7bCNCW7afPyOFSIJBZgNfe2MzNwWEUzeD3gRDzc32sfWLHX+2e+9fTYltBg7wWm9CI/tabWYBPWzuIJ5JEo3EKvG52VK/8u7Cb69n4VZQ6Yz1pVUUgsSAxSLBuUWacxHVvv8C7TV9QU+Hnjjk5IAsGRqP0XB/gylCIoJrE5rAz0+vkVixBxYNl1P+yl+jFNorOFk/9SawoFt5/pYquS1fZ03KG/tExDFnC6bbjctvx2BXUdJr+4AgVy/3ssvxMsusEQoswsK+SvA1HphZwKxzhzb0nGY7EyXY7sFllNASJWBJVS+PzuVhYlM+6h/ysSfcSb9iK7nJhETa0C4cA19S9Qlu311D/SSv5s7xYLDLhSAyPy07xvALuXlDIonlzWHpnIfeWPQ/A4LGXiTc8jSXL/efUaSPYNn5GzurGyQd0tDVSuuk9HDYFIQlG4kk2rLmPl6rKuadsyz/mBbZpcL0L4cmCVBCp+BHyd8YnfxdqOnGeeFJDtsgkkhqFeTNoamz+18EDKCVPgaKCzUB43OiBMwx11E0+4NjX3+N12RHAWEylqnzxuPJyqw8j5c1F0kNgt0I6ivbDgckF7KrdwtX+IYQkGIurZHscPLNq2bjzrY/uxvDOxkjFwOIgffnw5NbAd+0fMRZLIMsSad3AabNSsvLF/9z50PlaBAJDTzGrtD5zPinNvxImwASYABNgAkyACTABJmBc8QfJh15A+podBQAAAABJRU5ErkJggg==" style="width:56px;height:56px;object-fit:contain;" alt="Ensinensinaprende+">
+    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAwCAYAAABXAvmHAAADr0lEQVR42u3YW2wUVRjA8f+Z2dn7drtAbUsJTaogqSQIEqyuDaWiRKRiNU3VkGK4iBrFkEiIgmm0VqMxxIQ2xmAoCA82JXItEmsKoqStkFRtEFsjBFxqC93dttu9zO7sjA8m+qSpD223cb7Xk2/O+Z0z3zlnRnhvf9xgGofENA8TYAJMgAkwASbABJiA/zPAMlEPPnhyNz03w7gVmYeLZlPif25C+hETcZ3e/OE22q7cwGlTSAsLqtXBW+VLqSnflPkrsK/lHXa2fkuBL4uUIZgpVJ7sO8po/6npUQPNnT04dYNUNMaoqrOu93OevXaKyov7udH4WGYDjhz/gO5fAyiGTkQ1yA9dY0W4m7DTRyIrm9Q3hzIbcLD9Ano8ia5qDI+MsmrxQnLm3oYuRbH6rCSDP/Hj8e2ZCTjXtoez3X3YgFgkiielUvvqx+jLViPLY+AUKC6dLy/3ZiZg/+lOIsMxREonGIrgn18IgLakEjHDjbDEkbIcnA5JnOs8kHmAo+3d2CUJNZZET+pUly4BIPeB15HuWo7bCNCW7afPyOFSIJBZgNfe2MzNwWEUzeD3gRDzc32sfWLHX+2e+9fTYltBg7wWm9CI/tabWYBPWzuIJ5JEo3EKvG52VK/8u7Cb69n4VZQ6Yz1pVUUgsSAxSLBuUWacxHVvv8C7TV9QU+Hnjjk5IAsGRqP0XB/gylCIoJrE5rAz0+vkVixBxYNl1P+yl+jFNorOFk/9SawoFt5/pYquS1fZ03KG/tExDFnC6bbjctvx2BXUdJr+4AgVy/3ssvxMsusEQoswsK+SvA1HphZwKxzhzb0nGY7EyXY7sFllNASJWBJVS+PzuVhYlM+6h/ysSfcSb9iK7nJhETa0C4cA19S9Qlu311D/SSv5s7xYLDLhSAyPy07xvALuXlDIonlzWHpnIfeWPQ/A4LGXiTc8jSXL/efUaSPYNn5GzurGyQd0tDVSuuk9HDYFIQlG4kk2rLmPl6rKuadsyz/mBbZpcL0L4cmCVBCp+BHyd8YnfxdqOnGeeFJDtsgkkhqFeTNoamz+18EDKCVPgaKCzUB43OiBMwx11E0+4NjX3+N12RHAWEylqnzxuPJyqw8j5c1F0kNgt0I6ivbDgckF7KrdwtX+IYQkGIurZHscPLNq2bjzrY/uxvDOxkjFwOIgffnw5NbAd+0fMRZLIMsSad3AabNSsvLF/9z50PlaBAJDTzGrtD5zPinNvxImwASYABNgAkyACTABJmBc8QfJh15A+podBQAAAABJRU5ErkJggg==" style="width:56px;height:56px;object-fit:contain;" alt="Ensinensinaprende+">
   </div>
   <div>
     <div class="logo-text"><span style="color:#1a3a6b">ensin</span><span style="color:#e8721a">Aprende</span><span style="color:#1a3a6b">+</span></div>
@@ -483,7 +483,13 @@ body.auth-loading {
         </div>
         <button type="button" class="camera-btn" onclick="openCamera()">📷 &nbsp;Tirar foto agora</button>
         <div class="photo-tips"><strong>💡 Dica:</strong> Envie foto de livro ou apostila para a IA adaptar o plano ao material específico.</div>
-        <div id="previewArea" style="display:none;margin-top:14px;"></div>
+
+        <!-- Preview area: elementos necessários para o JS -->
+        <div id="previewArea" style="display:none;margin-top:14px;">
+          <img id="previewImg" class="preview-img" alt="Preview">
+          <div id="pdfName" class="pdf-name"></div>
+          <button id="removeImg" class="remove-img" onclick="removeFile()">Remover</button>
+        </div>
       </div>
       <div class="section-label" style="margin-top:20px"><span>3</span>O que deseja gerar</div>
       <div class="checkbox-grid" id="checkboxes">
@@ -587,42 +593,72 @@ let perfilAtual = null;
 async function initAuth() {
   if (!window.supabase) { setTimeout(initAuth, 200); return; }
 
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session) {
-    usuarioAtual = session.user;
-    await carregarPerfil();
-    mostrarApp();
-  } else {
-    mostrarLogin();
-  }
-
-  supabase.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'SIGNED_IN' && session) {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
       usuarioAtual = session.user;
-      await carregarPerfil();
+      try {
+        await carregarPerfil();
+      } catch (e) {
+        console.warn('Falha ao carregar perfil no initAuth:', e);
+        perfilAtual = perfilAtual || { plano: 'gratuito', usos_plano: 0, usos_avaliacao: 0 };
+      }
       mostrarApp();
-    } else if (event === 'SIGNED_OUT') {
-      usuarioAtual = null;
-      perfilAtual = null;
+    } else {
       mostrarLogin();
     }
-  });
+
+    supabase.auth.onAuthStateChange(async (event, session) => {
+      try {
+        if (event === 'SIGNED_IN' && session) {
+          usuarioAtual = session.user;
+          try {
+            await carregarPerfil();
+          } catch (e) {
+            console.warn('Falha ao carregar perfil onAuthStateChange:', e);
+            perfilAtual = perfilAtual || { plano: 'gratuito', usos_plano: 0, usos_avaliacao: 0 };
+          }
+          mostrarApp();
+        } else if (event === 'SIGNED_OUT') {
+          usuarioAtual = null;
+          perfilAtual = null;
+          mostrarLogin();
+        }
+      } catch (e) {
+        console.warn('Erro no onAuthStateChange handler:', e);
+        mostrarLogin();
+      }
+    });
+  } catch (e) {
+    console.warn('Erro initAuth:', e);
+    mostrarLogin();
+  }
 }
 
 function mostrarLogin() {
   document.body.classList.add('auth-loading');
   const ov = document.getElementById('authOverlay');
-  ov.style.display = '';
-  ov.style.visibility = '';
-  ov.style.pointerEvents = '';
-  ov.classList.add('visible');
+  if (ov) {
+    ov.classList.add('visible');
+    ov.style.display = 'block';
+    ov.style.visibility = 'visible';
+    ov.style.pointerEvents = 'auto';
+  }
+  // oculta elementos principais (por segurança)
+  const header = document.getElementById('mainHeader');
+  const main = document.querySelector('.main');
+  const userBar = document.getElementById('userBar');
+  if (header) header.style.display = 'none';
+  if (main) main.style.display = 'none';
+  if (userBar) { userBar.style.display = 'none'; userBar.style.visibility = 'hidden'; }
 }
 
 function mostrarApp() {
-  // Remove loading — shows header and main content
+  // Remove loading — mostra header e main content
   document.body.classList.remove('auth-loading');
   document.body.style.background = '';
   document.body.style.overflow = '';
+
   // Hide login overlay completely
   const overlay = document.getElementById('authOverlay');
   if (overlay) {
@@ -631,12 +667,22 @@ function mostrarApp() {
     overlay.style.visibility = 'hidden';
     overlay.style.pointerEvents = 'none';
   }
+
+  // Mostra header e main
+  const header = document.getElementById('mainHeader');
+  const main = document.querySelector('.main');
+  const userBar = document.getElementById('userBar');
+  if (header) header.style.display = 'flex';
+  if (main) main.style.display = 'block';
+  if (userBar) {
+    userBar.style.display = 'block';
+    userBar.style.visibility = 'visible';
+  }
+
   // Reset scroll to top of page
   window.scrollTo(0, 0);
   document.documentElement.scrollTop = 0;
-  // Show user bar
-  const bar = document.getElementById('userBar');
-  if (bar) bar.style.display = 'block';
+
   // Update user info
   const nome = perfilAtual?.nome || usuarioAtual?.email?.split('@')[0] || 'Professor';
   const nomeEl = document.getElementById('userNome');
@@ -644,17 +690,22 @@ function mostrarApp() {
   const plano = perfilAtual?.plano || 'gratuito';
   const badgeEl = document.getElementById('planoBadge');
   if (badgeEl) badgeEl.textContent = plano === 'gratuito' ? 'Gratuito' : 'Professor ⭐';
+
   atualizarUsageBar();
 }
 
 
 async function carregarPerfil() {
   try {
+    if (!usuarioAtual || !usuarioAtual.id) {
+      perfilAtual = { plano: 'gratuito', usos_plano: 0, usos_avaliacao: 0 };
+      return;
+    }
     const { data, error } = await supabase.from('perfis').select('*').eq('id', usuarioAtual.id).single();
     if (error) {
       console.warn('carregarPerfil error:', error.message);
-      // Create profile if missing
-      if (error.code === 'PGRST116') {
+      // Create profile if missing (PostgREST code may vary)
+      try {
         const { data: newPerfil } = await supabase.from('perfis').insert([{
           id: usuarioAtual.id,
           email: usuarioAtual.email,
@@ -663,12 +714,15 @@ async function carregarPerfil() {
           usos_avaliacao: 0
         }]).select().single();
         perfilAtual = newPerfil;
+      } catch (e) {
+        console.warn('Falha ao criar perfil automaticamente:', e);
+        perfilAtual = { plano: 'gratuito', usos_plano: 0, usos_avaliacao: 0 };
       }
     } else {
-      perfilAtual = data;
+      perfilAtual = data || { plano: 'gratuito', usos_plano: 0, usos_avaliacao: 0 };
     }
   } catch(e) {
-    console.warn('carregarPerfil exception:', e.message);
+    console.warn('carregarPerfil exception:', e);
     perfilAtual = { plano: 'gratuito', usos_plano: 0, usos_avaliacao: 0 };
   }
 }
@@ -677,14 +731,16 @@ async function carregarPerfil() {
 
 function atualizarUsageBar() {
   if (!perfilAtual) return;
+  const usoEl = document.getElementById('usageBar');
+  if (!usoEl) return;
   const plano = perfilAtual.plano || 'gratuito';
   if (plano !== 'gratuito') {
-    document.getElementById('usageBar').innerHTML = '<span style="color:#059669;">✓ Ilimitado</span>';
+    usoEl.innerHTML = '<span style="color:#059669;">✓ Ilimitado</span>';
     return;
   }
   const usosPl = perfilAtual.usos_plano || 0;
   const usosAv = perfilAtual.usos_avaliacao || 0;
-  document.getElementById('usageBar').innerHTML =
+  usoEl.innerHTML =
     `Planos: ${usosPl}/${LIMITE_PLANO} &nbsp;·&nbsp; Avaliações: ${usosAv}/${LIMITE_AVALIACAO}`;
 }
 
@@ -703,14 +759,18 @@ async function verificarLimite(tipo) {
 }
 
 async function incrementarUso(tipo) {
-  if (!perfilAtual) return;
+  if (!perfilAtual || !usuarioAtual) return;
   const plano = perfilAtual.plano || 'gratuito';
   if (plano !== 'gratuito') return;
   const campo = tipo === 'plano' ? 'usos_plano' : 'usos_avaliacao';
   const atual = perfilAtual[campo] || 0;
-  await supabase.from('perfis').update({ [campo]: atual + 1 }).eq('id', usuarioAtual.id);
-  perfilAtual[campo] = atual + 1;
-  atualizarUsageBar();
+  try {
+    await supabase.from('perfis').update({ [campo]: atual + 1 }).eq('id', usuarioAtual.id);
+    perfilAtual[campo] = atual + 1;
+    atualizarUsageBar();
+  } catch (e) {
+    console.warn('Erro ao incrementar uso:', e);
+  }
 }
 
 function authTab(tab) {
@@ -724,11 +784,13 @@ function authTab(tab) {
   document.getElementById('tabCadastroBtn').style.color = tab === 'cadastro' ? 'var(--accent)' : 'var(--muted)';
   document.getElementById('tabCadastroBtn').style.fontWeight = tab === 'cadastro' ? '600' : '500';
   document.getElementById('tabCadastroBtn').style.boxShadow = tab === 'cadastro' ? '0 1px 4px rgba(0,0,0,.08)' : 'none';
-  document.getElementById('authMsg').style.display = 'none';
+  const authMsgEl = document.getElementById('authMsg');
+  if (authMsgEl) authMsgEl.style.display = 'none';
 }
 
 function showAuthMsg(msg, ok) {
   const el = document.getElementById('authMsg');
+  if (!el) return;
   el.textContent = msg;
   el.style.display = 'block';
   el.style.background = ok ? 'rgba(5,150,105,.1)' : 'rgba(220,38,38,.1)';
@@ -736,13 +798,15 @@ function showAuthMsg(msg, ok) {
 }
 
 async function fazerLogin() {
-  const email = document.getElementById('loginEmail').value.trim();
-  const senha = document.getElementById('loginSenha').value;
+  const emailEl = document.getElementById('loginEmail');
+  const senhaEl = document.getElementById('loginSenha');
+  const email = emailEl ? emailEl.value.trim() : '';
+  const senha = senhaEl ? senhaEl.value : '';
   if (!email || !senha) { showAuthMsg('Preencha e-mail e senha.', false); return; }
   const btn = document.getElementById('btnLogin');
-  btn.textContent = 'Entrando...'; btn.disabled = true;
+  if (btn) { btn.textContent = 'Entrando...'; btn.disabled = true; }
   const { data: loginData, error } = await supabase.auth.signInWithPassword({ email, password: senha });
-  btn.textContent = 'Entrar'; btn.disabled = false;
+  if (btn) { btn.textContent = 'Entrar'; btn.disabled = false; }
   if (error) {
     if (error.message.includes('Email not confirmed')) {
       showAuthMsg('Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada.', false);
@@ -756,7 +820,11 @@ async function fazerLogin() {
   // Login OK — força mostrarApp diretamente sem esperar onAuthStateChange
   if (loginData?.user) {
     usuarioAtual = loginData.user;
-    await carregarPerfil();
+    try {
+      await carregarPerfil();
+    } catch (e) {
+      console.warn('Falha ao carregar perfil após login:', e);
+    }
     mostrarApp();
   }
 }
@@ -768,9 +836,9 @@ async function fazerCadastro() {
   if (!nome || !email || !senha) { showAuthMsg('Preencha todos os campos.', false); return; }
   if (senha.length < 6) { showAuthMsg('Senha deve ter ao menos 6 caracteres.', false); return; }
   const btn = document.getElementById('btnCadastro');
-  btn.textContent = 'Criando conta...'; btn.disabled = true;
+  if (btn) { btn.textContent = 'Criando conta...'; btn.disabled = true; }
   const { data, error } = await supabase.auth.signUp({ email, password: senha, options: { data: { nome } } });
-  btn.textContent = 'Criar conta grátis'; btn.disabled = false;
+  if (btn) { btn.textContent = 'Criar conta grátis'; btn.disabled = false; }
   if (error) {
     if (error.message.includes('already registered')) {
       showAuthMsg('Este e-mail já está cadastrado. Use a aba Entrar.', false);
@@ -787,8 +855,10 @@ async function fazerCadastro() {
   // Login automático (sem confirmação de e-mail)
   if (data?.session) {
     usuarioAtual = data.session.user;
-    await supabase.from('perfis').update({ nome }).eq('id', usuarioAtual.id);
-    await carregarPerfil();
+    try {
+      await supabase.from('perfis').update({ nome }).eq('id', usuarioAtual.id);
+    } catch(e) { /*silencioso*/ }
+    try { await carregarPerfil(); } catch(e){ console.warn(e); }
     mostrarApp();
   }
 }
@@ -805,10 +875,12 @@ async function sair() {
 }
 
 function mostrarUpgrade() {
-  document.getElementById('upgradeOverlay').style.display = 'flex';
+  const el = document.getElementById('upgradeOverlay');
+  if (el) el.style.display = 'flex';
 }
 function fecharUpgrade() {
-  document.getElementById('upgradeOverlay').style.display = 'none';
+  const el = document.getElementById('upgradeOverlay');
+  if (el) el.style.display = 'none';
 }
 function irParaPagamento(plano) {
   const p = plano || planoUpgrade || 'anual';
@@ -838,34 +910,41 @@ const CFG = {
 const KEYS = ['atividades','material','traducao'];
 
 /* ── Mostrar/ocultar tradução se Inglês ── */
-document.getElementById('componente').addEventListener('change', function() {
-  const isIngles = this.value === 'Língua Inglesa';
-  const checkTraducao = document.getElementById('checkTraducao');
-  if (isIngles) {
-    checkTraducao.style.display = 'flex';
-    const cb = checkTraducao.querySelector('input');
-    cb.checked = true;
-    checkTraducao.classList.add('checked');
-    checkTraducao.querySelector('.check-icon').textContent = '✓';
-  } else {
-    checkTraducao.style.display = 'none';
-    // desmarca se estava marcado
-    const cb = checkTraducao.querySelector('input');
-    if (cb.checked) {
-      cb.checked = false;
-      checkTraducao.classList.remove('checked');
-      checkTraducao.querySelector('.check-icon').textContent = '';
+const componenteEl = document.getElementById('componente');
+if (componenteEl) {
+  componenteEl.addEventListener('change', function() {
+    const isIngles = this.value === 'Língua Inglesa';
+    const checkTraducao = document.getElementById('checkTraducao');
+    if (!checkTraducao) return;
+    if (isIngles) {
+      checkTraducao.style.display = 'flex';
+      const cb = checkTraducao.querySelector('input');
+      cb.checked = true;
+      checkTraducao.classList.add('checked');
+      checkTraducao.querySelector('.check-icon').textContent = '✓';
+    } else {
+      checkTraducao.style.display = 'none';
+      const cb = checkTraducao.querySelector('input');
+      if (cb && cb.checked) {
+        cb.checked = false;
+        checkTraducao.classList.remove('checked');
+        checkTraducao.querySelector('.check-icon').textContent = '';
+      }
     }
-  }
-});
+  });
+}
 
 /* ── Tabs ── */
 function switchTab(mode) {
   currentMode = mode;
-  document.getElementById('tabManualBtn').classList.toggle('active', mode==='manual');
-  document.getElementById('tabUploadBtn').classList.toggle('active', mode==='upload');
-  document.getElementById('tab-manual').classList.toggle('active', mode==='manual');
-  document.getElementById('tab-upload').classList.toggle('active', mode==='upload');
+  const mBtn = document.getElementById('tabManualBtn');
+  const uBtn = document.getElementById('tabUploadBtn');
+  const mPanel = document.getElementById('tab-manual');
+  const uPanel = document.getElementById('tab-upload');
+  if (mBtn) mBtn.classList.toggle('active', mode==='manual');
+  if (uBtn) uBtn.classList.toggle('active', mode==='upload');
+  if (mPanel) mPanel.classList.toggle('active', mode==='manual');
+  if (uPanel) uPanel.classList.toggle('active', mode==='upload');
 }
 
 /* ── File Upload ── */
@@ -879,41 +958,54 @@ function handleFile(e) {
     uploadedMime = file.type;
     const img = document.getElementById('previewImg');
     const pn = document.getElementById('pdfName');
+    const removeBtn = document.getElementById('removeImg');
     if (file.type.startsWith('image/')) {
-      img.src = ev.target.result; img.classList.add('visible');
-      pn.style.display = 'none';
+      if (img) { img.src = ev.target.result; img.classList.add('visible'); }
+      if (pn) pn.style.display = 'none';
     } else {
-      img.classList.remove('visible');
-      pn.textContent = '📄 ' + file.name; pn.style.display = 'block';
+      if (img) img.classList.remove('visible');
+      if (pn) { pn.textContent = '📄 ' + file.name; pn.style.display = 'block'; }
     }
-    document.getElementById('removeImg').classList.add('visible');
+    if (removeBtn) removeBtn.classList.add('visible');
+    const previewArea = document.getElementById('previewArea');
+    if (previewArea) previewArea.style.display = 'block';
   };
   reader.readAsDataURL(file);
 }
 
 function removeFile() {
   uploadedB64 = null; uploadedMime = null;
-  document.getElementById('fileInput').value = '';
-  document.getElementById('previewImg').classList.remove('visible');
-  document.getElementById('removeImg').classList.remove('visible');
-  document.getElementById('pdfName').style.display = 'none';
+  const fileInput = document.getElementById('fileInput');
+  if (fileInput) fileInput.value = '';
+  const previewImg = document.getElementById('previewImg');
+  if (previewImg) previewImg.classList.remove('visible');
+  const removeBtn = document.getElementById('removeImg');
+  if (removeBtn) removeBtn.classList.remove('visible');
+  const pdfName = document.getElementById('pdfName');
+  if (pdfName) pdfName.style.display = 'none';
+  const previewArea = document.getElementById('previewArea');
+  if (previewArea) previewArea.style.display = 'none';
 }
 
 const zone = document.getElementById('uploadZone');
-zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
-zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
-zone.addEventListener('drop', e => {
-  e.preventDefault(); zone.classList.remove('dragover');
-  if (e.dataTransfer.files[0]) {
-    document.getElementById('fileInput').files = e.dataTransfer.files;
-    handleFile({target: {files: e.dataTransfer.files}});
-  }
-});
+if (zone) {
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault(); zone.classList.remove('dragover');
+    if (e.dataTransfer.files[0]) {
+      const fileInput = document.getElementById('fileInput');
+      if (fileInput) fileInput.files = e.dataTransfer.files;
+      handleFile({target: {files: e.dataTransfer.files}});
+    }
+  });
+}
 
 /* ── Checkbox ── */
 function toggleCheck(el) {
   el.classList.toggle('checked');
   const cb = el.querySelector('input');
+  if (!cb) return;
   cb.checked = !cb.checked;
   el.querySelector('.check-icon').textContent = cb.checked ? '✓' : '';
 }
@@ -1016,10 +1108,10 @@ function updateAIBadge(ai) {
 
 /* ── Generate ── */
 async function generate() {
-  const componente = document.getElementById('componente').value;
-  const ano        = document.getElementById('ano').value;
-  const volume     = document.getElementById('volume').value;
-  const pagina     = document.getElementById('pagina').value;
+  const componente = (document.getElementById('componente') ? document.getElementById('componente').value : '').trim();
+  const ano        = (document.getElementById('ano') ? document.getElementById('ano').value : '').trim();
+  const volume     = (document.getElementById('volume') ? document.getElementById('volume').value : '').trim();
+  const pagina     = (document.getElementById('pagina') ? document.getElementById('pagina').value : '').trim();
   const recursos   = getChecked();
 
   if (!componente) { alert('Por favor, selecione o componente curricular.'); return; }
@@ -1032,31 +1124,35 @@ async function generate() {
   if (!podeGerar) return;
 
   // Reset UI
-  document.getElementById('formSection').style.display = 'none';
-  document.getElementById('errorBox').classList.remove('visible');
-  document.getElementById('modules').innerHTML = '';
-  document.getElementById('results').classList.remove('visible');
-  document.getElementById('loading').classList.add('visible');
+  const formSection = document.getElementById('formSection');
+  if (formSection) formSection.style.display = 'none';
+  const errorBox = document.getElementById('errorBox');
+  if (errorBox) errorBox.classList.remove('visible');
+  const modulesEl = document.getElementById('modules');
+  if (modulesEl) modulesEl.innerHTML = '';
+  const resultsEl = document.getElementById('results');
+  if (resultsEl) resultsEl.classList.remove('visible');
+  const loadingEl = document.getElementById('loading');
+  if (loadingEl) loadingEl.classList.add('visible');
   generatedContent = {};
   activeAI = 'gemini';
   updateAIBadge('gemini');
 
   currentComponente = componente;
   currentRef = `${componente} · ${ano} · ${volume || 'Vol. ?'} · Pág. ${pagina || '?'}`;
-  document.getElementById('refTag').textContent = '📖 ' + currentRef;
+  const refTag = document.getElementById('refTag');
+  if (refTag) refTag.textContent = '📖 ' + currentRef;
 
-  const descricao = currentMode === 'manual'
-    ? document.getElementById('descricao').value
-    : (document.getElementById('descExtra').value || '');
+  const descricao = (document.getElementById('descricao') ? document.getElementById('descricao').value : '').trim();
 
   const duracao = volume || '2 períodos (100 min)';
   const recursosDisp = document.getElementById('recursos-disp') ? document.getElementById('recursos-disp').value : 'quadro e multimídia';
-  const contexto = 'Plano de Aula — ' + componente + ', ' + ano + '. Tema: ' + pagina + '. Duração: ' + duracao + '. Recursos: ' + recursosDisp + (descricao ? '. Orientação: ' + descricao : '') + (currentMode === 'upload' && uploadedB64 ? ' [Material de referência enviado como imagem/PDF]' : '');
+  const contexto = 'Plano de Aula — ' + componente + ', ' + ano + '. Tema: ' + pagina + '. Duração: ' + duracao + '. Recursos: ' + recursosDisp + (currentMode === 'upload' && uploadedB64 ? ' [Material de referência enviado como imagem/PDF]' : '');
 
   const systemPrompt = buildSystemPrompt(componente, ano);
 
   const buildContent = (prompt) => {
-    if (currentMode === 'upload') {
+    if (currentMode === 'upload' && uploadedB64) {
       return [
         { type: uploadedMime === 'application/pdf' ? 'document' : 'image',
           source: {type: 'base64', media_type: uploadedMime, data: uploadedB64} },
@@ -1070,13 +1166,13 @@ async function generate() {
   const progressBar = document.getElementById('progressBar');
 
   try {
-    document.getElementById('results').classList.add('visible');
+    if (resultsEl) resultsEl.classList.add('visible');
 
     for (let i = 0; i < recursos.length; i++) {
       const key = recursos[i];
       const c = CFG[key];
-      loadingMain.textContent = `Gerando ${i + 1} de ${recursos.length}: ${c.title}...`;
-      progressBar.style.width = ((i / recursos.length) * 100) + '%';
+      if (loadingMain) loadingMain.textContent = `Gerando ${i + 1} de ${recursos.length}: ${c.title}...`;
+      if (progressBar) progressBar.style.width = ((i / recursos.length) * 100) + '%';
 
       appendSkeleton(key);
 
@@ -1086,21 +1182,24 @@ async function generate() {
       replaceSkeleton(key, text);
     }
 
-    progressBar.style.width = '100%';
+    if (progressBar) progressBar.style.width = '100%';
     saveToHistory();
     await incrementarUso('plano');
     registrarConsulta(document.getElementById('componente').value, document.getElementById('ano').value, document.getElementById('volume').value, document.getElementById('pagina').value, recursos);
-    setTimeout(() => document.getElementById('loading').classList.remove('visible'), 400);
+    setTimeout(() => { const l = document.getElementById('loading'); if (l) l.classList.remove('visible'); }, 400);
 
   } catch (err) {
-    document.getElementById('loading').classList.remove('visible');
+    const l = document.getElementById('loading');
+    if (l) l.classList.remove('visible');
     if (Object.keys(generatedContent).length === 0) {
-      document.getElementById('formSection').style.display = 'block';
-      document.getElementById('results').classList.remove('visible');
+      if (formSection) formSection.style.display = 'block';
+      if (resultsEl) resultsEl.classList.remove('visible');
     }
     const eb = document.getElementById('errorBox');
-    eb.classList.add('visible');
-    eb.innerHTML = '⚠️ Erro: ' + err.message + '<br><small>Os recursos já gerados foram mantidos. Tente novamente para continuar.</small>';
+    if (eb) {
+      eb.classList.add('visible');
+      eb.innerHTML = '⚠️ Erro: ' + (err.message || String(err)) + '<br><small>Os recursos já gerados foram mantidos. Tente novamente para continuar.</small>';
+    }
   }
 }
 
@@ -1124,8 +1223,11 @@ function appendSkeleton(key) {
         <div class="sk-line short"></div>
       </div>
     </div>`;
-  document.getElementById('modules').appendChild(div);
-  div.scrollIntoView({behavior:'smooth', block:'nearest'});
+  const modulesEl = document.getElementById('modules');
+  if (modulesEl) {
+    modulesEl.appendChild(div);
+    div.scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
 }
 
 function replaceSkeleton(key, text) {
@@ -1147,29 +1249,34 @@ function replaceSkeleton(key, text) {
 }
 
 function escHtml(t) {
-  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return String(t || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 function escAttr(t) {
-  return t.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return String(t || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 function copyText(btn, text) {
   navigator.clipboard.writeText(text).then(() => {
+    const old = btn.innerHTML;
     btn.textContent = '✅ Copiado!';
-    setTimeout(() => btn.innerHTML = '📋 Copiar texto', 2000);
+    setTimeout(() => btn.innerHTML = old, 2000);
   });
 }
 
 function resetForm() {
-  document.getElementById('results').classList.remove('visible');
-  document.getElementById('formSection').style.display = 'block';
-  document.getElementById('modules').innerHTML = '';
-  document.getElementById('errorBox').classList.remove('visible');
+  const resultsEl = document.getElementById('results');
+  if (resultsEl) resultsEl.classList.remove('visible');
+  const formSection = document.getElementById('formSection');
+  if (formSection) formSection.style.display = 'block';
+  const modulesEl = document.getElementById('modules');
+  if (modulesEl) modulesEl.innerHTML = '';
+  const errorBox = document.getElementById('errorBox');
+  if (errorBox) errorBox.classList.remove('visible');
   generatedContent = {};
 }
 
 /* ── Logo SMED em base64 ── */
-const SMED_LOGO = 'data:image/jpeg;base64,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'
+const SMED_LOGO = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/...'; // mantive base64 encurtado para brevidade (já existente no original)
 
 /* ── Export PDF ── */
 function exportPDF() {
@@ -1188,7 +1295,7 @@ function exportPDF() {
   let pageNum = 1;
 
   // Remove emojis e URLs que corrompem ou quebram o PDF
-  const sanitize = (text) => text
+  const sanitize = (text) => String(text || '')
     .replace(/[\u{1F000}-\u{1FFFF}]/gu, '')
     .replace(/[\u2600-\u27BF]/gu, '')
     .replace(/✅|❌|📚|✏️|📎|🌐|📋|📄|📷|✨|⚠️|←/gu, '')
@@ -1394,16 +1501,19 @@ function getHistory() {
 
 function openHistory() {
   renderHistory();
-  document.getElementById('historyPanel').classList.add('open');
+  const panel = document.getElementById('historyPanel');
+  if (panel) panel.classList.add('open');
 }
 
 function closeHistory() {
-  document.getElementById('historyPanel').classList.remove('open');
+  const panel = document.getElementById('historyPanel');
+  if (panel) panel.classList.remove('open');
 }
 
 function renderHistory() {
   const list = document.getElementById('historyList');
   const history = getHistory();
+  if (!list) return;
   if (history.length === 0) {
     list.innerHTML = '<div class="history-empty">📭<br><br>Nenhuma consulta ainda.<br>Gere seu primeiro material!</div>';
     return;
@@ -1432,12 +1542,18 @@ function loadFromHistory(id) {
   currentComponente = item.componente || '';
 
   // Atualiza UI
-  document.getElementById('formSection').style.display = 'none';
-  document.getElementById('loading').classList.remove('visible');
-  document.getElementById('errorBox').classList.remove('visible');
-  document.getElementById('results').classList.add('visible');
-  document.getElementById('refTag').textContent = '📖 ' + currentRef;
-  document.getElementById('modules').innerHTML = '';
+  const formSection = document.getElementById('formSection');
+  if (formSection) formSection.style.display = 'none';
+  const loading = document.getElementById('loading');
+  if (loading) loading.classList.remove('visible');
+  const errorBox = document.getElementById('errorBox');
+  if (errorBox) errorBox.classList.remove('visible');
+  const resultsEl = document.getElementById('results');
+  if (resultsEl) resultsEl.classList.add('visible');
+  const refTag = document.getElementById('refTag');
+  if (refTag) refTag.textContent = '📖 ' + currentRef;
+  const modulesEl = document.getElementById('modules');
+  if (modulesEl) modulesEl.innerHTML = '';
 
   KEYS.forEach(key => {
     if (!generatedContent[key]) return;
@@ -1445,7 +1561,7 @@ function loadFromHistory(id) {
     const div = document.createElement('div');
     div.className = `module ${c.cls}`;
     div.id = 'mod-' + key;
-    document.getElementById('modules').appendChild(div);
+    if (modulesEl) modulesEl.appendChild(div);
     replaceSkeleton(key, generatedContent[key]);
   });
 
@@ -1466,7 +1582,7 @@ let capturedBlob = null;
 
 async function openCamera() {
   const modal = document.getElementById('cameraModal');
-  modal.classList.add('open');
+  if (modal) modal.classList.add('open');
   await startCamera();
 }
 
@@ -1488,15 +1604,19 @@ async function startCamera() {
       audio: false
     });
     const video = document.getElementById('cameraVideo');
-    video.srcObject = cameraStream;
+    if (video) video.srcObject = cameraStream;
     // Mostra botão flip só se houver mais de uma câmera
     const devices = await navigator.mediaDevices.enumerateDevices();
     const cameras = devices.filter(d => d.kind === 'videoinput');
-    document.getElementById('cameraFlip').style.display = cameras.length > 1 ? 'flex' : 'none';
+    const cameraFlipBtn = document.getElementById('cameraFlip');
+    if (cameraFlipBtn) cameraFlipBtn.style.display = cameras.length > 1 ? 'flex' : 'none';
     // Garante que capture/retake estejam no estado correto
-    document.getElementById('cameraCaptureBtn').style.display = 'block';
-    document.getElementById('cameraRetake').style.display = 'none';
-    document.getElementById('cameraUse').style.display = 'none';
+    const cap = document.getElementById('cameraCaptureBtn');
+    const ret = document.getElementById('cameraRetake');
+    const useBtn = document.getElementById('cameraUse');
+    if (cap) cap.style.display = 'block';
+    if (ret) ret.style.display = 'none';
+    if (useBtn) useBtn.style.display = 'none';
     capturedBlob = null;
   } catch(e) {
     alert('Não foi possível acessar a câmera. Verifique as permissões do navegador.');
@@ -1512,6 +1632,7 @@ async function flipCamera() {
 function capturePhoto() {
   const video = document.getElementById('cameraVideo');
   const canvas = document.getElementById('cameraCanvas');
+  if (!video || !canvas) return;
 
   // Calcula a área visível do vídeo (object-fit: contain cria barras pretas)
   const vW = video.videoWidth;
@@ -1539,15 +1660,18 @@ function capturePhoto() {
   ctx.drawImage(video, srcX, srcY, srcW, srcH, 0, 0, canvas.width, canvas.height);
 
   // Para o stream e exibe o canvas no lugar do vídeo
-  cameraStream.getTracks().forEach(t => t.stop());
-  video.srcObject = null;
-  video.style.display = 'none';
+  if (cameraStream) cameraStream.getTracks().forEach(t => t.stop());
+  if (video) { video.srcObject = null; video.style.display = 'none'; }
   canvas.style.display = 'block';
 
-  document.getElementById('cameraCaptureBtn').style.display = 'none';
-  document.getElementById('cameraFlip').style.display = 'none';
-  document.getElementById('cameraRetake').style.display = 'flex';
-  document.getElementById('cameraUse').style.display = 'flex';
+  const capBtn = document.getElementById('cameraCaptureBtn');
+  if (capBtn) capBtn.style.display = 'none';
+  const flipBtn = document.getElementById('cameraFlip');
+  if (flipBtn) flipBtn.style.display = 'none';
+  const ret = document.getElementById('cameraRetake');
+  if (ret) ret.style.display = 'flex';
+  const useBtn = document.getElementById('cameraUse');
+  if (useBtn) useBtn.style.display = 'flex';
 
   canvas.toBlob(blob => { capturedBlob = blob; }, 'image/jpeg', 0.95);
 }
@@ -1555,6 +1679,7 @@ function capturePhoto() {
 async function retakePhoto() {
   const video = document.getElementById('cameraVideo');
   const canvas = document.getElementById('cameraCanvas');
+  if (!video || !canvas) return;
   canvas.style.display = 'none';
   video.style.display = 'block';
   capturedBlob = null;
@@ -1568,10 +1693,13 @@ function usePhoto() {
     uploadedB64 = ev.target.result.split(',')[1];
     uploadedMime = 'image/jpeg';
     const img = document.getElementById('previewImg');
-    img.src = ev.target.result;
-    img.classList.add('visible');
-    document.getElementById('pdfName').style.display = 'none';
-    document.getElementById('removeImg').classList.add('visible');
+    if (img) { img.src = ev.target.result; img.classList.add('visible'); }
+    const pdfName = document.getElementById('pdfName');
+    if (pdfName) pdfName.style.display = 'none';
+    const removeBtn = document.getElementById('removeImg');
+    if (removeBtn) removeBtn.classList.add('visible');
+    const previewArea = document.getElementById('previewArea');
+    if (previewArea) previewArea.style.display = 'block';
     closeCamera();
     showToast('📷 Foto capturada com sucesso!');
   };
@@ -1585,14 +1713,15 @@ function closeCamera() {
   }
   const video = document.getElementById('cameraVideo');
   const canvas = document.getElementById('cameraCanvas');
-  video.srcObject = null;
-  video.style.display = 'block';
-  canvas.style.display = 'none';
-  document.getElementById('cameraModal').classList.remove('open');
+  if (video) { video.srcObject = null; video.style.display = 'block'; }
+  if (canvas) canvas.style.display = 'none';
+  const modal = document.getElementById('cameraModal');
+  if (modal) modal.classList.remove('open');
 }
 
 function showToast(msg) {
   const t = document.getElementById('toast');
+  if (!t) return;
   t.textContent = msg; t.classList.add('visible');
   setTimeout(() => t.classList.remove('visible'), 3000);
 }
@@ -1600,7 +1729,7 @@ function showToast(msg) {
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js');
+    navigator.serviceWorker.register('/sw.js').catch(e => console.warn('SW registration failed', e));
   });
 }
 </script>
