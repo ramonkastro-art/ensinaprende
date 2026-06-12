@@ -320,7 +320,7 @@ body.auth-loading {
         <label style="font-size:13px;font-weight:600;color:var(--muted);display:block;margin-bottom:6px;">SENHA</label>
         <input id="cadSenha" type="password" placeholder="mínimo 6 caracteres" style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;outline:none;" onkeydown="if(event.key==='Enter')fazerCadastro()">
       </div>
-      <button onclick="fazerCadastro()" id="btnCadastro" style="width:100%;padding:14px;background:linear-gradient(135deg,#1a4a9e,#1d4ed8);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(26,74,158,.3);">Criar conta grátis</button>
+      <button onclick="fazerCadastro()" id="btnCadastro" style="width:100%;padding:14px;background:linear-gradient(135deg,#1a4a9e,#1d4ed8);Color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(26,74,158,.3);">Criar conta grátis</button>
       <p style="text-align:center;margin-top:12px;font-size:12px;color:var(--muted);line-height:1.5;">
         Plano gratuito: 2 planos de aula + 1 avaliação.<br>Sem cartão de crédito.
       </p>
@@ -483,12 +483,11 @@ body.auth-loading {
         </div>
         <button type="button" class="camera-btn" onclick="openCamera()">📷 &nbsp;Tirar foto agora</button>
         <div class="photo-tips"><strong>💡 Dica:</strong> Envie foto de livro ou apostila para a IA adaptar o plano ao material específico.</div>
-
-        <!-- Preview area: elementos necessários para o JS -->
         <div id="previewArea" style="display:none;margin-top:14px;">
-          <img id="previewImg" class="preview-img" alt="Preview">
+          <!-- elementos referenciados no JS: previewImg, pdfName, removeImg -->
+          <img id="previewImg" class="preview-img" alt="Preview da imagem/PDF">
           <div id="pdfName" class="pdf-name"></div>
-          <button id="removeImg" class="remove-img" onclick="removeFile()">Remover</button>
+          <button id="removeImg" class="remove-img" type="button" onclick="removeFile()">Remover arquivo</button>
         </div>
       </div>
       <div class="section-label" style="margin-top:20px"><span>3</span>O que deseja gerar</div>
@@ -590,38 +589,40 @@ var LIMITE_AVALIACAO = 1;
 let usuarioAtual = null;
 let perfilAtual = null;
 
-// Safety flag: evita re-aplicar o estado de "auth-loading" depois que a UI já foi mostrada
+// internal flags / caches
+window.__ensinaAuthRegistered = window.__ensinaAuthRegistered || false;
+window.__ensinaAuthSub = window.__ensinaAuthSub || null;
+window.__ensina_carregarPerfilPromise = null;
 window.__ensinaAppShown = window.__ensinaAppShown || false;
 
+/* ── Authentication init (robusta e não-bloqueante) ── */
 async function initAuth() {
-  // Aguarda o SDK do Supabase estar disponível
   if (!window.supabase) { setTimeout(initAuth, 200); return; }
 
   try {
-    // Pega sessão atual
     const { data: { session } } = await supabase.auth.getSession();
-
     if (session) {
-      // Há sessão: marca usuário e mostra UI imediatamente
       usuarioAtual = session.user;
-      mostrarApp(); // mostra a interface antes de carregar perfil
-
-      // Carrega perfil de forma assíncrona (em background)
+      // mostra UI primeiro, carrega perfil depois (em background) — evita tela branca por espera longa
+      mostrarApp();
       carregarPerfil()
         .then(() => atualizarUsageBar())
-        .catch(e => console.warn('Falha ao carregar perfil após initAuth:', e));
+        .catch(e => console.warn('Falha ao carregar perfil inicial:', e));
     } else {
-      // Sem sessão: mostra tela de login
       mostrarLogin();
     }
+  } catch (e) {
+    console.warn('initAuth error:', e);
+    mostrarLogin();
+  }
 
-    // Observador de mudanças de auth (login/logout)
-    supabase.auth.onAuthStateChange(async (event, session) => {
+  // registra onAuthStateChange apenas UMA vez
+  if (!window.__ensinaAuthRegistered) {
+    const { data: { subscription } = {} } = supabase.auth.onAuthStateChange(async (event, session) => {
       try {
         if (event === 'SIGNED_IN' && session) {
           usuarioAtual = session.user;
-          mostrarApp(); // garante UI visível imediatamente no sign-in
-
+          mostrarApp();
           carregarPerfil()
             .then(() => atualizarUsageBar())
             .catch(e => console.warn('Falha ao carregar perfil no SIGNED_IN:', e));
@@ -634,95 +635,89 @@ async function initAuth() {
         console.warn('Erro no onAuthStateChange handler:', e);
         mostrarLogin();
       }
-      if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => setTimeout(initAuth, 100));
-      } else {
-      setTimeout(initAuth, 100);
-      }
     });
-  } catch (e) {
-    console.warn('Erro initAuth:', e);
-    mostrarLogin();
+
+    window.__ensinaAuthSub = subscription || null;
+    window.__ensinaAuthRegistered = true;
+
+    // cleanup opcional
+    window.addEventListener('beforeunload', () => {
+      if (window.__ensinaAuthSub && typeof window.__ensinaAuthSub.unsubscribe === 'function') {
+        try { window.__ensinaAuthSub.unsubscribe(); } catch (e) { /* silent */ }
+      }
+    }, {capture:true});
   }
 }
 
+/* ── Mostrar / esconder UI de forma resiliente ── */
 function mostrarLogin() {
-  try {
-    // Se a UI já foi exibida, não reaplicar o overlay de login (previne tela branca após login)
-    if (window.__ensinaAppShown) {
-      console.info('mostrarLogin() ignorada porque UI já está visível');
-      return;
-    }
-
-    document.body.classList.add('auth-loading');
-    const ov = document.getElementById('authOverlay');
-    if (ov) {
-      ov.classList.add('visible');
-      ov.style.display = 'block';
-      ov.style.visibility = 'visible';
-      ov.style.pointerEvents = 'auto';
-    }
-
-    // Esconder elementos principais de forma reversível
-    const header = document.getElementById('mainHeader') || document.querySelector('header');
-    const main = document.querySelector('.main') || document.querySelector('main');
-    const userBar = document.getElementById('userBar') || document.querySelector('.user-bar');
-
-    if (header) { header.style.setProperty('visibility','hidden','important'); header.style.setProperty('display','none','important'); }
-    if (main)   { main.style.setProperty('visibility','hidden','important'); main.style.setProperty('display','none','important'); main.style.setProperty('height','0','important'); }
-    if (userBar){ userBar.style.setProperty('visibility','hidden','important'); userBar.style.setProperty('display','none','important'); }
-
-    // Segurança: não permitir que o body fique permanentemente escondido — fallback para remover auth-loading após 10s
-    setTimeout(() => {
-      if (document.body.classList.contains('auth-loading')) {
-        console.warn('mostrarLogin fallback: removendo auth-loading após timeout de segurança');
-        document.body.classList.remove('auth-loading');
-      }
-    }, 10000);
-  } catch (e) {
-    console.warn('mostrarLogin() erro:', e);
+  document.body.classList.add('auth-loading');
+  const ov = document.getElementById('authOverlay');
+  if (ov) {
+    ov.classList.add('visible');
+    ov.style.setProperty('display','block','important');
+    ov.style.setProperty('visibility','visible','important');
+    ov.style.setProperty('pointer-events','auto','important');
   }
+  // esconde elementos principais (garantia)
+  const header = document.getElementById('mainHeader');
+  const main = document.querySelector('.main');
+  const userBar = document.getElementById('userBar');
+  [header, main, userBar].forEach(el => {
+    if (!el) return;
+    try {
+      el.style.setProperty('display','none','important');
+      el.style.setProperty('visibility','hidden','important');
+    } catch(e){}
+  });
 }
 
 function mostrarApp() {
   try {
-    // Marca que a UI foi exibida (evita que rota de login a esconda novamente)
     if (!window.__ensinaAppShown) window.__ensinaAppShown = true;
 
-    // Remove estado global de loading
     document.body.classList.remove('auth-loading');
     document.body.style.removeProperty('visibility');
     document.body.style.removeProperty('overflow');
     document.documentElement.style.removeProperty('visibility');
 
-    // Função utilitária para forçar visibilidade com !important
     const setVisibleImportant = (el) => {
       if (!el) return;
       try {
         const cs = getComputedStyle(el);
-        const disp = cs.display === 'none' ? 'block' : cs.display;
-        el.style.setProperty('display', disp, 'important');
+        let defaultDisplay = 'block';
+        const tag = (el.tagName || '').toLowerCase();
+        if (tag === 'header' || tag === 'nav' || tag === 'main' || el.classList.contains('logo-icon')) defaultDisplay = 'flex';
+        if (tag === 'footer') defaultDisplay = 'block';
+        if (cs.display && cs.display !== 'none') defaultDisplay = cs.display;
+
+        el.style.setProperty('display', defaultDisplay, 'important');
         el.style.setProperty('visibility', 'visible', 'important');
         el.style.setProperty('opacity', '1', 'important');
         el.style.setProperty('pointer-events', 'auto', 'important');
         el.style.setProperty('transform', 'none', 'important');
-        el.style.setProperty('height', 'auto', 'important');
-        el.style.setProperty('min-height', 'calc(var(--vh, 1vh) * 100)', 'important');
-        el.style.setProperty('max-height', 'none', 'important');
-        el.removeAttribute && el.removeAttribute('hidden');
+        el.style.removeProperty('height');
+        el.style.removeProperty('min-height');
+        el.style.removeProperty('max-height');
+        if (el.hasAttribute && el.hasAttribute('hidden')) el.removeAttribute('hidden');
         if (el.hasAttribute && el.hasAttribute('aria-hidden')) el.removeAttribute('aria-hidden');
-      } catch (e) { /* não trava se algum elemento for estranho */ }
+      } catch (e) { /* não quebra */ }
     };
 
-    // Elementos críticos
     const header = document.getElementById('mainHeader') || document.querySelector('header');
     const main = document.querySelector('.main') || document.querySelector('main') || document.getElementById('main');
     const userBar = document.getElementById('userBar') || document.querySelector('.user-bar');
+    const overlay = document.getElementById('authOverlay');
 
     [header, main, userBar].forEach(setVisibleImportant);
 
-    // Remove overlay de login se existir
-    const overlay = document.getElementById('authOverlay');
+    if (userBar) {
+      try {
+        userBar.style.setProperty('display', 'flex', 'important');
+        userBar.style.setProperty('visibility', 'visible', 'important');
+      } catch(e){}
+    }
+
     if (overlay) {
       overlay.classList.remove('visible');
       overlay.style.setProperty('display','none','important');
@@ -730,39 +725,33 @@ function mostrarApp() {
       overlay.style.setProperty('pointer-events','none','important');
     }
 
-    // Se main tem rect 0x0, força dimensões básicas
+    // Reset scroll to top of page
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+
+    // Update user info if possible (perfil pode estar carregando)
+    const nome = perfilAtual?.nome || usuarioAtual?.email?.split('@')[0] || 'Professor';
+    const nomeEl = document.getElementById('userNome');
+    if (nomeEl) nomeEl.textContent = nome;
+    const plano = perfilAtual?.plano || 'gratuito';
+    const badgeEl = document.getElementById('planoBadge');
+    if (badgeEl) badgeEl.textContent = plano === 'gratuito' ? 'Gratuito' : 'Professor ⭐';
+    atualizarUsageBar();
+
+    // Forçar dimensão básica se main estiver 0x0 (fallback conservador)
     if (main) {
       const rect = main.getBoundingClientRect();
       if (rect.width === 0 || rect.height === 0) {
+        main.style.setProperty('min-height','40vh','important');
         main.style.setProperty('width','100%','important');
-        main.style.setProperty('height','auto','important');
       }
-      // Força visibilidade de filhos importantes (até um limite)
-      Array.from(main.querySelectorAll('*')).slice(0, 1200).forEach(c => {
-        try {
-          const cs = getComputedStyle(c);
-          if (cs.visibility === 'hidden' || cs.opacity === '0' || cs.display === 'none') {
-            c.style.setProperty('visibility','visible','important');
-            c.style.setProperty('opacity','1','important');
-            c.style.setProperty('display', cs.display === 'none' ? 'block' : cs.display, 'important');
-            c.style.setProperty('pointer-events','auto','important');
-          }
-        } catch(e){}
-      });
     }
 
-    // Remove attributes problemáticos em elementos críticos
-    ['hidden','aria-hidden'].forEach(attr => {
-      [document.body, header, main, userBar, overlay].forEach(el => {
-        if (el && el.hasAttribute && el.hasAttribute(attr)) el.removeAttribute(attr);
-      });
-    });
-
-    // Se alguma rotina tentar reaplicar auth-loading imediatamente, limpamos novamente
+    // Remover classe auth-loading novamente em 300ms por segurança
     setTimeout(() => {
       document.body.classList.remove('auth-loading');
       if (overlay) overlay.classList.remove('visible');
-    }, 400);
+    }, 300);
 
     console.info('mostrarApp() executada — UI forçada visível.');
   } catch (e) {
@@ -770,51 +759,172 @@ function mostrarApp() {
   }
 }
 
+/* ── Auth actions (login/cadastro) ── */
+function showAuthMsg(msg, ok) {
+  const el = document.getElementById('authMsg');
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.style.background = ok ? 'rgba(5,150,105,.1)' : 'rgba(220,38,38,.1)';
+  el.style.color = ok ? '#059669' : '#dc2626';
+}
 
+async function fazerLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const senha = document.getElementById('loginSenha').value;
+  if (!email || !senha) { showAuthMsg('Preencha e-mail e senha.', false); return; }
+  const btn = document.getElementById('btnLogin');
+  btn.textContent = 'Entrando...'; btn.disabled = true;
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password: senha });
+    btn.textContent = 'Entrar'; btn.disabled = false;
+    if (error) {
+      const msg = (error.message || '').toLowerCase();
+      if (msg.includes('email not confirmed') || msg.includes('confirm')) {
+        showAuthMsg('Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada.', false);
+      } else if (msg.includes('invalid') || msg.includes('credentials')) {
+        showAuthMsg('E-mail ou senha incorretos.', false);
+      } else {
+        showAuthMsg('Erro: ' + (error.message || error), false);
+      }
+      return;
+    }
+    const user = data?.user || data?.session?.user;
+    if (user) {
+      usuarioAtual = user;
+      // Mostrar UI imediatamente, carregar perfil em background
+      mostrarApp();
+      carregarPerfil()
+        .then(() => atualizarUsageBar())
+        .catch(e => console.warn('Falha ao carregar perfil após login:', e));
+    }
+  } catch (e) {
+    btn.textContent = 'Entrar'; btn.disabled = false;
+    showAuthMsg('Erro: ' + (e.message || e), false);
+  }
+}
+
+async function fazerCadastro() {
+  const nome = document.getElementById('cadNome').value.trim();
+  const email = document.getElementById('cadEmail').value.trim();
+  const senha = document.getElementById('cadSenha').value;
+  if (!nome || !email || !senha) { showAuthMsg('Preencha todos os campos.', false); return; }
+  if (senha.length < 6) { showAuthMsg('Senha deve ter ao menos 6 caracteres.', false); return; }
+  const btn = document.getElementById('btnCadastro');
+  btn.textContent = 'Criando conta...'; btn.disabled = true;
+  try {
+    const { data, error } = await supabase.auth.signUp({ email, password: senha, options: { data: { nome } } });
+    btn.textContent = 'Criar conta grátis'; btn.disabled = false;
+    if (error) {
+      if ((error.message || '').includes('already registered')) {
+        showAuthMsg('Este e-mail já está cadastrado. Use a aba Entrar.', false);
+      } else {
+        showAuthMsg('Erro: ' + (error.message || error), false);
+      }
+      return;
+    }
+    // Se for criada conta que requer confirmação
+    if (data?.user && !data?.session) {
+      showAuthMsg('✅ Conta criada! Verifique seu e-mail para confirmar o cadastro.', true);
+      return;
+    }
+    // Login automático
+    if (data?.session) {
+      usuarioAtual = data.session.user;
+      // Atualiza nome no perfil (tenta, mas sem travar)
+      supabase.from('perfis').update({ nome }).eq('id', usuarioAtual.id).catch(()=>{});
+      mostrarApp();
+      carregarPerfil().then(()=>atualizarUsageBar()).catch(e=>console.warn(e));
+    }
+  } catch (e) {
+    btn.textContent = 'Criar conta grátis'; btn.disabled = false;
+    showAuthMsg('Erro: ' + (e.message || e), false);
+  }
+}
+
+async function esqueceuSenha() {
+  const email = document.getElementById('loginEmail').value.trim();
+  if (!email) { showAuthMsg('Digite seu e-mail primeiro.', false); return; }
+  try {
+    await supabase.auth.resetPasswordForEmail(email);
+    showAuthMsg('E-mail de redefinição enviado!', true);
+  } catch (e) {
+    showAuthMsg('Erro ao solicitar redefinição: ' + (e.message || e), false);
+  }
+}
+
+async function sair() {
+  try {
+    await supabase.auth.signOut();
+  } catch (e) {
+    console.warn('Erro ao deslogar:', e);
+  }
+}
+
+/* ── carregarPerfil com memoização e tolerância a erros ── */
 async function carregarPerfil() {
   const fallback = { plano: 'gratuito', usos_plano: 0, usos_avaliacao: 0 };
-
   try {
     if (!usuarioAtual || !usuarioAtual.id) {
       perfilAtual = fallback;
       return perfilAtual;
     }
+    if (window.__ensina_carregarPerfilPromise) return window.__ensina_carregarPerfilPromise;
 
-    const { data, error } = await supabase
-      .from('perfis')
-      .select('*')
-      .eq('id', usuarioAtual.id)
-      .single();
+    window.__ensina_carregarPerfilPromise = (async () => {
+      try {
+        const { data, error } = await supabase.from('perfis').select('*').eq('id', usuarioAtual.id).single();
+        window.__ensina_carregarPerfilPromise = null;
+        if (error) {
+          console.warn('carregarPerfil error:', error.message || error);
+          // tentativa de criar perfil se não existir (PGRST116 or similar)
+          try {
+            const { data: newPerfil } = await supabase.from('perfis').insert([{
+              id: usuarioAtual.id,
+              email: usuarioAtual.email,
+              plano: 'gratuito',
+              usos_plano: 0,
+              usos_avaliacao: 0
+            }]).select().single();
+            perfilAtual = newPerfil || fallback;
+            return perfilAtual;
+          } catch (ie) {
+            console.warn('Não foi possível criar perfil automaticamente:', ie);
+            perfilAtual = fallback;
+            return perfilAtual;
+          }
+        } else {
+          perfilAtual = data || fallback;
+          return perfilAtual;
+        }
+      } catch (e) {
+        console.warn('carregarPerfil exception inner:', e);
+        window.__ensina_carregarPerfilPromise = null;
+        perfilAtual = fallback;
+        return perfilAtual;
+      }
+    })();
 
-    if (error || !data) {
-      console.warn('carregarPerfil error:', error?.message || 'sem data');
-      perfilAtual = fallback;
-      return perfilAtual;
-    }
-
-    perfilAtual = data;
-    return perfilAtual;
+    return window.__ensina_carregarPerfilPromise;
   } catch (e) {
     console.warn('carregarPerfil exception:', e);
+    window.__ensina_carregarPerfilPromise = null;
     perfilAtual = fallback;
     return perfilAtual;
   }
 }
 
-
-
 function atualizarUsageBar() {
   if (!perfilAtual) return;
-  const usoEl = document.getElementById('usageBar');
-  if (!usoEl) return;
   const plano = perfilAtual.plano || 'gratuito';
   if (plano !== 'gratuito') {
-    usoEl.innerHTML = '<span style="color:#059669;">✓ Ilimitado</span>';
+    const ub = document.getElementById('usageBar');
+    if (ub) ub.innerHTML = '<span style="color:#059669;">✓ Ilimitado</span>';
     return;
   }
   const usosPl = perfilAtual.usos_plano || 0;
   const usosAv = perfilAtual.usos_avaliacao || 0;
-  usoEl.innerHTML =
+  const ub = document.getElementById('usageBar');
+  if (ub) ub.innerHTML =
     `Planos: ${usosPl}/${LIMITE_PLANO} &nbsp;·&nbsp; Avaliações: ${usosAv}/${LIMITE_AVALIACAO}`;
 }
 
@@ -833,20 +943,21 @@ async function verificarLimite(tipo) {
 }
 
 async function incrementarUso(tipo) {
-  if (!perfilAtual || !usuarioAtual) return;
+  if (!perfilAtual) return;
   const plano = perfilAtual.plano || 'gratuito';
   if (plano !== 'gratuito') return;
   const campo = tipo === 'plano' ? 'usos_plano' : 'usos_avaliacao';
   const atual = perfilAtual[campo] || 0;
   try {
     await supabase.from('perfis').update({ [campo]: atual + 1 }).eq('id', usuarioAtual.id);
-    perfilAtual[campo] = atual + 1;
-    atualizarUsageBar();
   } catch (e) {
-    console.warn('Erro ao incrementar uso:', e);
+    console.warn('Erro atualizar uso no supabase:', e);
   }
+  perfilAtual[campo] = atual + 1;
+  atualizarUsageBar();
 }
 
+/* ── UI helpers ── */
 function authTab(tab) {
   document.getElementById('formLogin').style.display = tab === 'login' ? 'block' : 'none';
   document.getElementById('formCadastro').style.display = tab === 'cadastro' ? 'block' : 'none';
@@ -858,136 +969,10 @@ function authTab(tab) {
   document.getElementById('tabCadastroBtn').style.color = tab === 'cadastro' ? 'var(--accent)' : 'var(--muted)';
   document.getElementById('tabCadastroBtn').style.fontWeight = tab === 'cadastro' ? '600' : '500';
   document.getElementById('tabCadastroBtn').style.boxShadow = tab === 'cadastro' ? '0 1px 4px rgba(0,0,0,.08)' : 'none';
-  const authMsgEl = document.getElementById('authMsg');
-  if (authMsgEl) authMsgEl.style.display = 'none';
+  document.getElementById('authMsg').style.display = 'none';
 }
 
-function showAuthMsg(msg, ok) {
-  const el = document.getElementById('authMsg');
-  if (!el) return;
-  el.textContent = msg;
-  el.style.display = 'block';
-  el.style.background = ok ? 'rgba(5,150,105,.1)' : 'rgba(220,38,38,.1)';
-  el.style.color = ok ? '#059669' : '#dc2626';
-}
-
-async function fazerLogin() {
-  const email = document.getElementById('loginEmail').value.trim();
-  const senha = document.getElementById('loginSenha').value;
-  if (!email || !senha) { showAuthMsg('Preencha e-mail e senha.', false); return; }
-
-  const btn = document.getElementById('btnLogin');
-  btn.textContent = 'Entrando...';
-  btn.disabled = true;
-
-  const { data: loginData, error } = await supabase.auth.signInWithPassword({
-    email,
-    password: senha
-  });
-
-  btn.textContent = 'Entrar';
-  btn.disabled = false;
-
-  if (error) {
-    if (error.message.includes('Email not confirmed')) {
-      showAuthMsg('Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada.', false);
-    } else if (error.message.includes('Invalid login') || error.message.includes('Invalid credentials')) {
-      showAuthMsg('E-mail ou senha incorretos.', false);
-    } else {
-      showAuthMsg('Erro: ' + error.message, false);
-    }
-    return;
-  }
-
-  if (loginData?.user) {
-    usuarioAtual = loginData.user;
-    mostrarApp(); // primeiro mostra a interface
-    carregarPerfil()
-      .then(() => atualizarUsageBar())
-      .catch(e => console.warn('Falha ao carregar perfil após login:', e));
-  }
-}
-
-async function fazerCadastro() {
-  const nome = document.getElementById('cadNome').value.trim();
-  const email = document.getElementById('cadEmail').value.trim();
-  const senha = document.getElementById('cadSenha').value;
-
-  if (!nome || !email || !senha) { showAuthMsg('Preencha todos os campos.', false); return; }
-  if (senha.length < 6) { showAuthMsg('Senha deve ter ao menos 6 caracteres.', false); return; }
-
-  const btn = document.getElementById('btnCadastro');
-  btn.textContent = 'Criando conta...';
-  btn.disabled = true;
-
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password: senha,
-    options: { data: { nome } }
-  });
-
-  btn.textContent = 'Criar conta grátis';
-  btn.disabled = false;
-
-  if (error) {
-    if (error.message.includes('already registered')) {
-      showAuthMsg('Este e-mail já está cadastrado. Use a aba Entrar.', false);
-    } else {
-      showAuthMsg('Erro: ' + error.message, false);
-    }
-    return;
-  }
-
-  if (data?.user && !data?.session) {
-    showAuthMsg('✅ Conta criada! Verifique seu e-mail para confirmar o cadastro.', true);
-    return;
-  }
-
-  if (data?.session) {
-    usuarioAtual = data.session.user;
-    mostrarApp(); // não espera perfil
-    supabase.from('perfis').update({ nome }).eq('id', usuarioAtual.id)
-      .catch(() => {});
-    carregarPerfil()
-      .then(() => atualizarUsageBar())
-      .catch(e => console.warn('Falha ao carregar perfil após cadastro:', e));
-  }
-}
-
-async function esqueceuSenha() {
-  const email = document.getElementById('loginEmail').value.trim();
-  if (!email) { showAuthMsg('Digite seu e-mail primeiro.', false); return; }
-  await supabase.auth.resetPasswordForEmail(email);
-  showAuthMsg('E-mail de redefinição enviado!', true);
-}
-
-async function sair() {
-  await supabase.auth.signOut();
-}
-
-function mostrarUpgrade() {
-  const el = document.getElementById('upgradeOverlay');
-  if (el) el.style.display = 'flex';
-}
-function fecharUpgrade() {
-  const el = document.getElementById('upgradeOverlay');
-  if (el) el.style.display = 'none';
-}
-function irParaPagamento(plano) {
-  const p = plano || planoUpgrade || 'anual';
-  fecharUpgrade();
-  window.location.href = '/assinar?plano=' + p;
-}
-
-// Inicia auth ao carregar
-// Aguarda SDK carregar antes de iniciar auth
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => setTimeout(initAuth, 100));
-} else {
-  setTimeout(initAuth, 100);
-}
-
-/* ── State ── */
+/* ── File Upload ── */
 let currentMode = 'manual';
 let uploadedB64 = null, uploadedMime = null;
 let generatedContent = {}, currentRef = '', currentComponente = '';
@@ -1000,47 +985,16 @@ const CFG = {
 
 const KEYS = ['atividades','material','traducao'];
 
-/* ── Mostrar/ocultar tradução se Inglês ── */
-const componenteEl = document.getElementById('componente');
-if (componenteEl) {
-  componenteEl.addEventListener('change', function() {
-    const isIngles = this.value === 'Língua Inglesa';
-    const checkTraducao = document.getElementById('checkTraducao');
-    if (!checkTraducao) return;
-    if (isIngles) {
-      checkTraducao.style.display = 'flex';
-      const cb = checkTraducao.querySelector('input');
-      cb.checked = true;
-      checkTraducao.classList.add('checked');
-      checkTraducao.querySelector('.check-icon').textContent = '✓';
-    } else {
-      checkTraducao.style.display = 'none';
-      const cb = checkTraducao.querySelector('input');
-      if (cb && cb.checked) {
-        cb.checked = false;
-        checkTraducao.classList.remove('checked');
-        checkTraducao.querySelector('.check-icon').textContent = '';
-      }
-    }
-  });
-}
-
-/* ── Tabs ── */
 function switchTab(mode) {
   currentMode = mode;
-  const mBtn = document.getElementById('tabManualBtn');
-  const uBtn = document.getElementById('tabUploadBtn');
-  const mPanel = document.getElementById('tab-manual');
-  const uPanel = document.getElementById('tab-upload');
-  if (mBtn) mBtn.classList.toggle('active', mode==='manual');
-  if (uBtn) uBtn.classList.toggle('active', mode==='upload');
-  if (mPanel) mPanel.classList.toggle('active', mode==='manual');
-  if (uPanel) uPanel.classList.toggle('active', mode==='upload');
+  document.getElementById('tabManualBtn').classList.toggle('active', mode==='manual');
+  document.getElementById('tabUploadBtn').classList.toggle('active', mode==='upload');
+  document.getElementById('tab-manual').classList.toggle('active', mode==='manual');
+  document.getElementById('tab-upload').classList.toggle('active', mode==='upload');
 }
 
-/* ── File Upload ── */
 function handleFile(e) {
-  const file = e.target.files[0];
+  const file = e.target.files ? e.target.files[0] : (e.files ? e.files[0] : null);
   if (!file) return;
   if (file.size > 10*1024*1024) { alert('Arquivo muito grande. Máximo: 10 MB.'); return; }
   const reader = new FileReader();
@@ -1049,7 +1003,7 @@ function handleFile(e) {
     uploadedMime = file.type;
     const img = document.getElementById('previewImg');
     const pn = document.getElementById('pdfName');
-    const removeBtn = document.getElementById('removeImg');
+    const previewArea = document.getElementById('previewArea');
     if (file.type.startsWith('image/')) {
       if (img) { img.src = ev.target.result; img.classList.add('visible'); }
       if (pn) pn.style.display = 'none';
@@ -1057,9 +1011,9 @@ function handleFile(e) {
       if (img) img.classList.remove('visible');
       if (pn) { pn.textContent = '📄 ' + file.name; pn.style.display = 'block'; }
     }
-    if (removeBtn) removeBtn.classList.add('visible');
-    const previewArea = document.getElementById('previewArea');
     if (previewArea) previewArea.style.display = 'block';
+    const rem = document.getElementById('removeImg');
+    if (rem) rem.classList.add('visible');
   };
   reader.readAsDataURL(file);
 }
@@ -1068,14 +1022,14 @@ function removeFile() {
   uploadedB64 = null; uploadedMime = null;
   const fileInput = document.getElementById('fileInput');
   if (fileInput) fileInput.value = '';
-  const previewImg = document.getElementById('previewImg');
-  if (previewImg) previewImg.classList.remove('visible');
-  const removeBtn = document.getElementById('removeImg');
-  if (removeBtn) removeBtn.classList.remove('visible');
-  const pdfName = document.getElementById('pdfName');
-  if (pdfName) pdfName.style.display = 'none';
+  const img = document.getElementById('previewImg');
+  const pn = document.getElementById('pdfName');
   const previewArea = document.getElementById('previewArea');
+  if (img) { img.src = ''; img.classList.remove('visible'); }
+  if (pn) pn.style.display = 'none';
   if (previewArea) previewArea.style.display = 'none';
+  const rem = document.getElementById('removeImg');
+  if (rem) rem.classList.remove('visible');
 }
 
 const zone = document.getElementById('uploadZone');
@@ -1085,18 +1039,16 @@ if (zone) {
   zone.addEventListener('drop', e => {
     e.preventDefault(); zone.classList.remove('dragover');
     if (e.dataTransfer.files[0]) {
-      const fileInput = document.getElementById('fileInput');
-      if (fileInput) fileInput.files = e.dataTransfer.files;
+      document.getElementById('fileInput').files = e.dataTransfer.files;
       handleFile({target: {files: e.dataTransfer.files}});
     }
   });
 }
 
-/* ── Checkbox ── */
+/* ── Checkbox helpers ── */
 function toggleCheck(el) {
   el.classList.toggle('checked');
   const cb = el.querySelector('input');
-  if (!cb) return;
   cb.checked = !cb.checked;
   el.querySelector('.check-icon').textContent = cb.checked ? '✓' : '';
 }
@@ -1104,19 +1056,16 @@ function getChecked() {
   return [...document.querySelectorAll('#checkboxes input')].filter(c => c.checked).map(c => c.value);
 }
 
-/* ── System prompt dinâmico por componente ── */
+/* ── Prompts e API ── */
 function buildSystemPrompt(componente, ano) {
   const isEM = ano.includes('EM');
   const isEF1 = ['1º ano','2º ano','3º ano','4º ano','5º ano'].includes(ano);
   const segmento = isEM ? 'Ensino Médio' : isEF1 ? 'Ensino Fundamental I (Anos Iniciais)' : 'Ensino Fundamental II (Anos Finais)';
   const faixaIdade = isEM ? 'jovens de 15 a 18 anos' : isEF1 ? 'crianças de 6 a 10 anos' : 'adolescentes de 11 a 15 anos';
   const linguagem = isEF1 ? 'simples, lúdica e acolhedora' : isEM ? 'clara, contextualizada e crítica' : 'objetiva e contextualizada';
-  return 'Você é um professor especialista em elaborar planos de aula completos e materiais pedagógicos de alta qualidade para a Educação Básica brasileira, alinhados à BNCC.\n\nCONTEXTO:\n- Segmento: ' + segmento + '\n- Componente: ' + componente + '\n- Público: ' + faixaIdade + '\n- Linguagem: ' + linguagem + '\n\nPRINCÍPIOS:\n- Seja prático e direto — professores precisam de material utilizável imediatamente\n- Adapte exemplos à realidade brasileira e ao cotidiano dos alunos\n- Inclua sempre estratégias para inclusão (AEE/NEE)\n- Conecte o conteúdo com competências da BNCC em linguagem descritiva (sem citar códigos alfanuméricos)\n- Nunca invente conteúdo fora do que foi solicitado\n\nFORMATO: Texto puro, organizado, em português brasileiro. Sem JSON, sem markdown, sem asteriscos, sem backticks. Títulos em LETRAS MAIÚsCULAS.';
+  return 'Você é um professor especialista em elaborar planos de aula completos e materiais pedagógicos de alta qualidade para a Educação Básica brasileira, alinhados à BNCC.\n\nCONTEXTO:\n- Segmento: ' + segmento + '\n- Componente: ' + componente + '\n- Público: ' + faixaIdade + '\n- Linguagem: ' + linguagem + '\n\nPRINCÍPIOS:\n- Seja prático e direto — professores precisam de material utilizável imediatamente\n- Adapte exemplos à realidade brasileira e ao cotidiano dos alunos\n- Inclua sempre estratégias para inclusão (AEE/NEE)\n- Conecte o conteúdo com competências da BNCC em linguagem descritiva (sem citar códigos alfanuméricos)\n- Nunca invente conteúdo fora do que foi solicitado\n\nFORMATO: Texto puro, organizado, em português brasileiro. Sem JSON, sem markdown, sem asteriscos, sem backticks. Títulos em LETRAS MAIÚSULAS.';
 }
 
-
-
-/* ── Prompts por recurso ── */
 function getMaterialTipo(componente) {
   if (componente === 'Língua Portuguesa') return 'TEXTO PARA TRABALHO EM SALA\nEscreva um texto adequado ao ano (conto, crônica, notícia, poema ou texto informativo) com 150 a 250 palavras sobre o tema.\n\nATIVIDADES DE INTERPRETAÇÃO\nElabore 4 questões: 2 de interpretação literal, 1 de inferência e 1 de linguagem/vocabulário. Inclua gabarito.';
   if (componente === 'Matemática') return 'SITUAÇÕES-PROBLEMA\nElabore 4 problemas contextualizados do mais simples ao mais complexo. Inclua gabarito com resolução passo a passo do mais difícil.\n\nCONCEITO EM FOCO\nExplique o conceito principal com linguagem acessível e 1 exemplo resolvido.';
@@ -1148,7 +1097,6 @@ function buildResourcePrompt(key, componente, ano, contexto) {
 
   return base + '\n\nGere material pedagógico prático para ' + componente + ', ' + ano + '. Máximo 400 palavras.';
 }
-
 
 /* ── API call ── */
 let activeAI = 'gemini';
@@ -1199,10 +1147,10 @@ function updateAIBadge(ai) {
 
 /* ── Generate ── */
 async function generate() {
-  const componente = (document.getElementById('componente') ? document.getElementById('componente').value : '').trim();
-  const ano        = (document.getElementById('ano') ? document.getElementById('ano').value : '').trim();
-  const volume     = (document.getElementById('volume') ? document.getElementById('volume').value : '').trim();
-  const pagina     = (document.getElementById('pagina') ? document.getElementById('pagina').value : '').trim();
+  const componente = document.getElementById('componente').value;
+  const ano        = document.getElementById('ano').value;
+  const volume     = document.getElementById('volume').value;
+  const pagina     = document.getElementById('pagina').value;
   const recursos   = getChecked();
 
   if (!componente) { alert('Por favor, selecione o componente curricular.'); return; }
@@ -1215,35 +1163,31 @@ async function generate() {
   if (!podeGerar) return;
 
   // Reset UI
-  const formSection = document.getElementById('formSection');
-  if (formSection) formSection.style.display = 'none';
-  const errorBox = document.getElementById('errorBox');
-  if (errorBox) errorBox.classList.remove('visible');
-  const modulesEl = document.getElementById('modules');
-  if (modulesEl) modulesEl.innerHTML = '';
-  const resultsEl = document.getElementById('results');
-  if (resultsEl) resultsEl.classList.remove('visible');
-  const loadingEl = document.getElementById('loading');
-  if (loadingEl) loadingEl.classList.add('visible');
+  document.getElementById('formSection').style.display = 'none';
+  document.getElementById('errorBox').classList.remove('visible');
+  document.getElementById('modules').innerHTML = '';
+  document.getElementById('results').classList.remove('visible');
+  document.getElementById('loading').classList.add('visible');
   generatedContent = {};
   activeAI = 'gemini';
   updateAIBadge('gemini');
 
   currentComponente = componente;
   currentRef = `${componente} · ${ano} · ${volume || 'Vol. ?'} · Pág. ${pagina || '?'}`;
-  const refTag = document.getElementById('refTag');
-  if (refTag) refTag.textContent = '📖 ' + currentRef;
+  document.getElementById('refTag').textContent = '📖 ' + currentRef;
 
-  const descricao = (document.getElementById('descricao') ? document.getElementById('descricao').value : '').trim();
+  const descricao = currentMode === 'manual'
+    ? document.getElementById('descricao').value
+    : (document.getElementById('descExtra') ? (document.getElementById('descExtra').value || '') : '');
 
   const duracao = volume || '2 períodos (100 min)';
   const recursosDisp = document.getElementById('recursos-disp') ? document.getElementById('recursos-disp').value : 'quadro e multimídia';
-  const contexto = 'Plano de Aula — ' + componente + ', ' + ano + '. Tema: ' + pagina + '. Duração: ' + duracao + '. Recursos: ' + recursosDisp + (currentMode === 'upload' && uploadedB64 ? ' [Material de referência enviado como imagem/PDF]' : '');
+  const contexto = 'Plano de Aula — ' + componente + ', ' + ano + '. Tema: ' + pagina + '. Duração: ' + duracao + '. Recursos: ' + recursosDisp + (descricao ? '. Orientação: ' + descricao : '') + (currentMode === 'upload' && uploadedB64 ? ' [Material de referência enviado como imagem/PDF]' : '');
 
   const systemPrompt = buildSystemPrompt(componente, ano);
 
   const buildContent = (prompt) => {
-    if (currentMode === 'upload' && uploadedB64) {
+    if (currentMode === 'upload') {
       return [
         { type: uploadedMime === 'application/pdf' ? 'document' : 'image',
           source: {type: 'base64', media_type: uploadedMime, data: uploadedB64} },
@@ -1257,13 +1201,13 @@ async function generate() {
   const progressBar = document.getElementById('progressBar');
 
   try {
-    if (resultsEl) resultsEl.classList.add('visible');
+    document.getElementById('results').classList.add('visible');
 
     for (let i = 0; i < recursos.length; i++) {
       const key = recursos[i];
       const c = CFG[key];
-      if (loadingMain) loadingMain.textContent = `Gerando ${i + 1} de ${recursos.length}: ${c.title}...`;
-      if (progressBar) progressBar.style.width = ((i / recursos.length) * 100) + '%';
+      loadingMain.textContent = `Gerando ${i + 1} de ${recursos.length}: ${c.title}...`;
+      progressBar.style.width = ((i / recursos.length) * 100) + '%';
 
       appendSkeleton(key);
 
@@ -1273,28 +1217,25 @@ async function generate() {
       replaceSkeleton(key, text);
     }
 
-    if (progressBar) progressBar.style.width = '100%';
+    progressBar.style.width = '100%';
     saveToHistory();
     await incrementarUso('plano');
     registrarConsulta(document.getElementById('componente').value, document.getElementById('ano').value, document.getElementById('volume').value, document.getElementById('pagina').value, recursos);
-    setTimeout(() => { const l = document.getElementById('loading'); if (l) l.classList.remove('visible'); }, 400);
+    setTimeout(() => document.getElementById('loading').classList.remove('visible'), 400);
 
   } catch (err) {
-    const l = document.getElementById('loading');
-    if (l) l.classList.remove('visible');
+    document.getElementById('loading').classList.remove('visible');
     if (Object.keys(generatedContent).length === 0) {
-      if (formSection) formSection.style.display = 'block';
-      if (resultsEl) resultsEl.classList.remove('visible');
+      document.getElementById('formSection').style.display = 'block';
+      document.getElementById('results').classList.remove('visible');
     }
     const eb = document.getElementById('errorBox');
-    if (eb) {
-      eb.classList.add('visible');
-      eb.innerHTML = '⚠️ Erro: ' + (err.message || String(err)) + '<br><small>Os recursos já gerados foram mantidos. Tente novamente para continuar.</small>';
-    }
+    eb.classList.add('visible');
+    eb.innerHTML = '⚠️ Erro: ' + (err.message || err) + '<br><small>Os recursos já gerados foram mantidos. Tente novamente para continuar.</small>';
   }
 }
 
-/* ── Skeleton ── */
+/* ── Skeleton / replace / copiar (mais seguro: usa generatedContent) ── */
 function appendSkeleton(key) {
   const c = CFG[key];
   const div = document.createElement('div');
@@ -1314,29 +1255,8 @@ function appendSkeleton(key) {
         <div class="sk-line short"></div>
       </div>
     </div>`;
-  const modulesEl = document.getElementById('modules');
-  if (modulesEl) {
-    modulesEl.appendChild(div);
-    div.scrollIntoView({behavior:'smooth', block:'nearest'});
-  }
-}
-
-function replaceSkeleton(key, text) {
-  const c = CFG[key];
-  const div = document.getElementById('mod-' + key);
-  if (!div) return;
-  div.innerHTML = `
-    <div class="module-header" onclick="this.parentElement.classList.toggle('open')">
-      <div class="module-icon">${c.icon}</div>
-      <div class="module-title">${c.title}</div>
-      <span class="module-badge">${c.badge}</span>
-      <span class="chevron">▼</span>
-    </div>
-    <div class="module-body">
-      <div class="module-content">${escHtml(text)}</div>
-      <button class="copy-btn" onclick="copyText(this, this.dataset.text)" data-text="${escAttr(text)}">📋 Copiar texto</button>
-    </div>`;
-  div.classList.add('open');
+  document.getElementById('modules').appendChild(div);
+  div.scrollIntoView({behavior:'smooth', block:'nearest'});
 }
 
 function escHtml(t) {
@@ -1346,38 +1266,51 @@ function escAttr(t) {
   return String(t || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-function copyText(btn, text) {
-  navigator.clipboard.writeText(text).then(() => {
+function replaceSkeleton(key, text) {
+  const c = CFG[key];
+  const div = document.getElementById('mod-' + key);
+  if (!div) return;
+  // guarda no objeto gerado em memória (não injetamos atributos enormes)
+  generatedContent[key] = text;
+  div.innerHTML = `
+    <div class="module-header" onclick="this.parentElement.classList.toggle('open')">
+      <div class="module-icon">${c.icon}</div>
+      <div class="module-title">${c.title}</div>
+      <span class="module-badge">${c.badge}</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="module-body">
+      <div class="module-content">${escHtml(text)}</div>
+      <button class="copy-btn" data-key="${key}" onclick="copyText(this)">📋 Copiar texto</button>
+    </div>`;
+  div.classList.add('open');
+}
+
+function copyText(btn) {
+  const key = btn && btn.dataset && btn.dataset.key;
+  const texto = key ? (generatedContent[key] || '') : '';
+  if (!texto) return;
+  navigator.clipboard.writeText(texto).then(() => {
     const old = btn.innerHTML;
     btn.textContent = '✅ Copiado!';
     setTimeout(() => btn.innerHTML = old, 2000);
+  }).catch(e => {
+    console.warn('Erro ao copiar:', e);
+    try { window.prompt('Copiar manualmente (Ctrl+C):', texto); } catch(e2){}
   });
 }
 
-function resetForm() {
-  const resultsEl = document.getElementById('results');
-  if (resultsEl) resultsEl.classList.remove('visible');
-  const formSection = document.getElementById('formSection');
-  if (formSection) formSection.style.display = 'block';
-  const modulesEl = document.getElementById('modules');
-  if (modulesEl) modulesEl.innerHTML = '';
-  const errorBox = document.getElementById('errorBox');
-  if (errorBox) errorBox.classList.remove('visible');
-  generatedContent = {};
-}
+/* ── Export PDF (mantido) ── */
+const SMED_LOGO = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/...'; // mantido reduzido aqui por brevidade
 
-/* ── Logo SMED em base64 ── */
-const SMED_LOGO = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/...'; // mantive base64 encurtado para brevidade (já existente no original)
-
-/* ── Export PDF ── */
 function exportPDF() {
   const {jsPDF} = window.jspdf;
   const doc = new jsPDF({unit:'mm', format:'a4'});
   const W=210, M=20, cW=W-M*2;
   const PAGE_H = 297;
   const FOOTER_H = 18;
-  const HEADER_H_P1 = 22;   // altura do cabeçalho na pág 1
-  const HEADER_H_REST = 12; // altura do cabeçalho nas demais páginas
+  const HEADER_H_P1 = 22;
+  const HEADER_H_REST = 12;
   const CONTENT_TOP_P1 = 34;
   const CONTENT_TOP_REST = 22;
   const BOTTOM_LIMIT = PAGE_H - FOOTER_H - 4;
@@ -1385,7 +1318,6 @@ function exportPDF() {
   let y = CONTENT_TOP_P1;
   let pageNum = 1;
 
-  // Remove emojis e URLs que corrompem ou quebram o PDF
   const sanitize = (text) => String(text || '')
     .replace(/[\u{1F000}-\u{1FFFF}]/gu, '')
     .replace(/[\u2600-\u27BF]/gu, '')
@@ -1395,7 +1327,6 @@ function exportPDF() {
     .trim();
 
   const drawHeader = (isFirst) => {
-    // Faixa tricolor: azul petróleo | amarelo dourado | laranja
     const third = W / 3;
     const h = isFirst ? HEADER_H_P1 : HEADER_H_REST;
     doc.setFillColor(31,119,150);  doc.rect(0, 0, third, h, 'F');
@@ -1403,7 +1334,7 @@ function exportPDF() {
     doc.setFillColor(214,120,40);  doc.rect(third*2, 0, third+1, h, 'F');
 
     if (isFirst) {
-      try { doc.addImage(SMED_LOGO, 'PNG', W-26, 1, 18, 18); } catch(e) {}
+      try { doc.addImage(SMED_LOGO, 'PNG', W-26, 1, 18, 18); } catch(e){}
       doc.setFontSize(14); doc.setFont('helvetica','bold'); doc.setTextColor(255,255,255);
       doc.text('ENSINAPRENDE+', M, 10);
       doc.setFontSize(9); doc.setFont('helvetica','normal');
@@ -1411,9 +1342,9 @@ function exportPDF() {
     } else {
       doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(255,255,255);
       doc.text('ENSINAPRENDE+ · Planos de Aula com IA', M, 7);
-      try { doc.addImage(SMED_LOGO, 'PNG', W-14, 0, 11, 11); } catch(e) {}
+      try { doc.addImage(SMED_LOGO, 'PNG', W-14, 0, 11, 11); } catch(e){}
     }
-  }
+  };
 
   const drawFooter = () => {
     const pg = doc.getNumberOfPages();
@@ -1424,7 +1355,6 @@ function exportPDF() {
     doc.line(0,PAGE_H-FOOTER_H,W,PAGE_H-FOOTER_H);
     doc.setFontSize(10); doc.setFont('helvetica','normal'); doc.setTextColor(140,148,170);
     doc.text('Ensinensinaprende+ · Ensinaprende+ · ' + new Date().toLocaleDateString('pt-BR'), M, PAGE_H-FOOTER_H+5);
-    // Paginação será escrita depois que soubermos o total
     doc.setFontSize(9); doc.setFont('helvetica','italic'); doc.setTextColor(130,120,150);
     doc.text('Execute com autenticidade. Protagonize em sala.', W/2, PAGE_H-FOOTER_H+10, {align:'center'});
     doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(170,160,180);
@@ -1457,7 +1387,6 @@ function exportPDF() {
     y += 2;
   };
 
-  // === PÁGINA 1 — Cabeçalho ===
   drawHeader(true);
 
   writeLine('Plano de Aula', 14, true, [20,40,100]);
@@ -1471,15 +1400,12 @@ function exportPDF() {
   doc.line(M, y, W-M, y);
   y += 7;
 
-  // === SEÇÕES ===
   KEYS.forEach(key => {
     if (!generatedContent[key]) return;
     const c = CFG[key];
 
-    // Cabeçalho da seção — garante espaço mínimo para título + pelo menos 2 linhas de conteúdo
     checkSpace(18);
 
-    // Caixa do título
     doc.setFillColor(240,244,255);
     doc.roundedRect(M-2, y-5, cW+4, 10, 2, 2, 'F');
     doc.setDrawColor(180,195,235);
@@ -1488,7 +1414,6 @@ function exportPDF() {
     writeLine(c.title.toUpperCase(), 13, true, [25,55,140]);
     y += 1;
 
-    // Conteúdo — processa parágrafo por parágrafo, linha por linha
     const textoCompleto = sanitize(generatedContent[key]);
     const paragrafos = textoCompleto.split('\n');
     const BODY_SIZE = 12;
@@ -1497,13 +1422,12 @@ function exportPDF() {
     for (const par of paragrafos) {
       const trimmed = par.trim();
       if (!trimmed) { y += lh * 0.4; continue; }
-      // Subtítulos internos: tudo maiúsculo, curtos (até 50 chars), sem pontuação final
       const isSubtitle = trimmed === trimmed.toUpperCase()
         && trimmed.length > 3
         && trimmed.length < 50
         && !/[.,;:!?]$/.test(trimmed);
       if (isSubtitle) {
-        y += 2; // espaço antes do subtítulo
+        y += 2;
         doc.setFontSize(SUBTITLE_SIZE);
         doc.setFont('helvetica','bold');
         doc.setTextColor(25,55,140);
@@ -1522,7 +1446,6 @@ function exportPDF() {
     }
     y += 8;
 
-    // Separador
     checkSpace(6);
     doc.setDrawColor(230,233,242);
     doc.setLineWidth(0.3);
@@ -1530,10 +1453,8 @@ function exportPDF() {
     y += 4;
   });
 
-  // Rodapé da última página
   drawFooter();
 
-  // Escreve paginação em todas as páginas agora que sabemos o total
   const totalPages = doc.getNumberOfPages();
   for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i);
@@ -1543,7 +1464,6 @@ function exportPDF() {
     doc.setFont('helvetica','normal');
     doc.setTextColor(140,148,170);
     doc.text(i + ' / ' + totalPages, W-M, PAGE_H-FOOTER_H+5, {align:'right'});
-    // Restaura estado padrão do conteúdo nesta página
     doc.setFontSize(12);
     doc.setFont('helvetica','normal');
     doc.setTextColor(45,50,65);
@@ -1553,27 +1473,30 @@ function exportPDF() {
   showToast('PDF exportado com sucesso!');
 }
 
-
-
-/* ── Histórico ── */
+/* ── Histórico (mais seguro: try/catch e truncamento) ── */
 const HISTORY_KEY = 'aprende_mais_history';
 const MAX_HISTORY = 20;
 
 function saveToHistory() {
   if (!currentRef || Object.keys(generatedContent).length === 0) return;
-  const item = {
-    id: Date.now(),
-    ref: currentRef,
-    componente: currentComponente,
-    date: new Date().toLocaleString('pt-BR'),
-    recursos: Object.keys(generatedContent),
-    content: {...generatedContent}
-  };
-  const history = getHistory();
-  // Remove duplicata do mesmo ref se existir
-  const filtered = history.filter(h => h.ref !== currentRef);
-  filtered.unshift(item);
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(filtered.slice(0, MAX_HISTORY)));
+  try {
+    const contentForSave = Object.fromEntries(Object.entries(generatedContent).map(([k,v]) => [k, String(v || '').slice(0,15000)]));
+    const item = {
+      id: Date.now(),
+      ref: currentRef,
+      componente: currentComponente,
+      date: new Date().toLocaleString('pt-BR'),
+      recursos: Object.keys(generatedContent),
+      content: contentForSave
+    };
+    const history = getHistory();
+    const filtered = history.filter(h => h.ref !== currentRef);
+    filtered.unshift(item);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(filtered.slice(0, MAX_HISTORY)));
+  } catch (e) {
+    console.warn('Não foi possível salvar histórico (quota?):', e);
+    showToast('⚠️ Histórico não salvo — espaço insuficiente.');
+  }
 }
 
 async function registrarConsulta(componente, ano, volume, pagina, recursos) {
@@ -1583,7 +1506,7 @@ async function registrarConsulta(componente, ano, volume, pagina, recursos) {
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({ componente, ano, volume, pagina, recursos })
     });
-  } catch(e) { /* silencioso — não bloqueia o fluxo */ }
+  } catch(e) { /* silencioso */ }
 }
 
 function getHistory() {
@@ -1592,19 +1515,16 @@ function getHistory() {
 
 function openHistory() {
   renderHistory();
-  const panel = document.getElementById('historyPanel');
-  if (panel) panel.classList.add('open');
+  document.getElementById('historyPanel').classList.add('open');
 }
 
 function closeHistory() {
-  const panel = document.getElementById('historyPanel');
-  if (panel) panel.classList.remove('open');
+  document.getElementById('historyPanel').classList.remove('open');
 }
 
 function renderHistory() {
   const list = document.getElementById('historyList');
   const history = getHistory();
-  if (!list) return;
   if (history.length === 0) {
     list.innerHTML = '<div class="history-empty">📭<br><br>Nenhuma consulta ainda.<br>Gere seu primeiro material!</div>';
     return;
@@ -1627,24 +1547,16 @@ function loadFromHistory(id) {
 
   closeHistory();
 
-  // Restaura estado
   generatedContent = {...item.content};
   currentRef = item.ref;
   currentComponente = item.componente || '';
 
-  // Atualiza UI
-  const formSection = document.getElementById('formSection');
-  if (formSection) formSection.style.display = 'none';
-  const loading = document.getElementById('loading');
-  if (loading) loading.classList.remove('visible');
-  const errorBox = document.getElementById('errorBox');
-  if (errorBox) errorBox.classList.remove('visible');
-  const resultsEl = document.getElementById('results');
-  if (resultsEl) resultsEl.classList.add('visible');
-  const refTag = document.getElementById('refTag');
-  if (refTag) refTag.textContent = '📖 ' + currentRef;
-  const modulesEl = document.getElementById('modules');
-  if (modulesEl) modulesEl.innerHTML = '';
+  document.getElementById('formSection').style.display = 'none';
+  document.getElementById('loading').classList.remove('visible');
+  document.getElementById('errorBox').classList.remove('visible');
+  document.getElementById('results').classList.add('visible');
+  document.getElementById('refTag').textContent = '📖 ' + currentRef;
+  document.getElementById('modules').innerHTML = '';
 
   KEYS.forEach(key => {
     if (!generatedContent[key]) return;
@@ -1652,7 +1564,7 @@ function loadFromHistory(id) {
     const div = document.createElement('div');
     div.className = `module ${c.cls}`;
     div.id = 'mod-' + key;
-    if (modulesEl) modulesEl.appendChild(div);
+    document.getElementById('modules').appendChild(div);
     replaceSkeleton(key, generatedContent[key]);
   });
 
@@ -1666,24 +1578,22 @@ function clearHistory() {
   showToast('🗑️ Histórico limpo!');
 }
 
-/* ── Camera ── */
+/* ── Camera (mantido) ── */
 let cameraStream = null;
-let cameraFacing = 'environment'; // traseira por padrão
+let cameraFacing = 'environment';
 let capturedBlob = null;
 
 async function openCamera() {
   const modal = document.getElementById('cameraModal');
-  if (modal) modal.classList.add('open');
+  modal.classList.add('open');
   await startCamera();
 }
 
 async function startCamera() {
-  // Para stream anterior se existir
   if (cameraStream) {
     cameraStream.getTracks().forEach(t => t.stop());
   }
   try {
-    // Usa resolução próxima da tela para evitar zoom
     const screenW = window.screen.width * window.devicePixelRatio;
     const screenH = window.screen.height * window.devicePixelRatio;
     cameraStream = await navigator.mediaDevices.getUserMedia({
@@ -1695,19 +1605,13 @@ async function startCamera() {
       audio: false
     });
     const video = document.getElementById('cameraVideo');
-    if (video) video.srcObject = cameraStream;
-    // Mostra botão flip só se houver mais de uma câmera
+    video.srcObject = cameraStream;
     const devices = await navigator.mediaDevices.enumerateDevices();
     const cameras = devices.filter(d => d.kind === 'videoinput');
-    const cameraFlipBtn = document.getElementById('cameraFlip');
-    if (cameraFlipBtn) cameraFlipBtn.style.display = cameras.length > 1 ? 'flex' : 'none';
-    // Garante que capture/retake estejam no estado correto
-    const cap = document.getElementById('cameraCaptureBtn');
-    const ret = document.getElementById('cameraRetake');
-    const useBtn = document.getElementById('cameraUse');
-    if (cap) cap.style.display = 'block';
-    if (ret) ret.style.display = 'none';
-    if (useBtn) useBtn.style.display = 'none';
+    document.getElementById('cameraFlip').style.display = cameras.length > 1 ? 'flex' : 'none';
+    document.getElementById('cameraCaptureBtn').style.display = 'block';
+    document.getElementById('cameraRetake').style.display = 'none';
+    document.getElementById('cameraUse').style.display = 'none';
     capturedBlob = null;
   } catch(e) {
     alert('Não foi possível acessar a câmera. Verifique as permissões do navegador.');
@@ -1723,9 +1627,7 @@ async function flipCamera() {
 function capturePhoto() {
   const video = document.getElementById('cameraVideo');
   const canvas = document.getElementById('cameraCanvas');
-  if (!video || !canvas) return;
 
-  // Calcula a área visível do vídeo (object-fit: contain cria barras pretas)
   const vW = video.videoWidth;
   const vH = video.videoHeight;
   const elW = video.clientWidth;
@@ -1736,11 +1638,9 @@ function capturePhoto() {
   let srcX = 0, srcY = 0, srcW = vW, srcH = vH;
 
   if (videoAspect > elAspect) {
-    // Barras em cima e embaixo — corta altura
     srcH = vW / elAspect;
     srcY = (vH - srcH) / 2;
   } else {
-    // Barras nas laterais — corta largura
     srcW = vH * elAspect;
     srcX = (vW - srcW) / 2;
   }
@@ -1750,19 +1650,15 @@ function capturePhoto() {
   const ctx = canvas.getContext('2d');
   ctx.drawImage(video, srcX, srcY, srcW, srcH, 0, 0, canvas.width, canvas.height);
 
-  // Para o stream e exibe o canvas no lugar do vídeo
-  if (cameraStream) cameraStream.getTracks().forEach(t => t.stop());
-  if (video) { video.srcObject = null; video.style.display = 'none'; }
+  cameraStream.getTracks().forEach(t => t.stop());
+  video.srcObject = null;
+  video.style.display = 'none';
   canvas.style.display = 'block';
 
-  const capBtn = document.getElementById('cameraCaptureBtn');
-  if (capBtn) capBtn.style.display = 'none';
-  const flipBtn = document.getElementById('cameraFlip');
-  if (flipBtn) flipBtn.style.display = 'none';
-  const ret = document.getElementById('cameraRetake');
-  if (ret) ret.style.display = 'flex';
-  const useBtn = document.getElementById('cameraUse');
-  if (useBtn) useBtn.style.display = 'flex';
+  document.getElementById('cameraCaptureBtn').style.display = 'none';
+  document.getElementById('cameraFlip').style.display = 'none';
+  document.getElementById('cameraRetake').style.display = 'flex';
+  document.getElementById('cameraUse').style.display = 'flex';
 
   canvas.toBlob(blob => { capturedBlob = blob; }, 'image/jpeg', 0.95);
 }
@@ -1770,7 +1666,6 @@ function capturePhoto() {
 async function retakePhoto() {
   const video = document.getElementById('cameraVideo');
   const canvas = document.getElementById('cameraCanvas');
-  if (!video || !canvas) return;
   canvas.style.display = 'none';
   video.style.display = 'block';
   capturedBlob = null;
@@ -1785,14 +1680,14 @@ function usePhoto() {
     uploadedMime = 'image/jpeg';
     const img = document.getElementById('previewImg');
     if (img) { img.src = ev.target.result; img.classList.add('visible'); }
-    const pdfName = document.getElementById('pdfName');
-    if (pdfName) pdfName.style.display = 'none';
-    const removeBtn = document.getElementById('removeImg');
-    if (removeBtn) removeBtn.classList.add('visible');
-    const previewArea = document.getElementById('previewArea');
-    if (previewArea) previewArea.style.display = 'block';
+    const pn = document.getElementById('pdfName');
+    if (pn) pn.style.display = 'none';
+    const rem = document.getElementById('removeImg');
+    if (rem) rem.classList.add('visible');
     closeCamera();
     showToast('📷 Foto capturada com sucesso!');
+    const previewArea = document.getElementById('previewArea');
+    if (previewArea) previewArea.style.display = 'block';
   };
   reader.readAsDataURL(capturedBlob);
 }
@@ -1804,23 +1699,30 @@ function closeCamera() {
   }
   const video = document.getElementById('cameraVideo');
   const canvas = document.getElementById('cameraCanvas');
-  if (video) { video.srcObject = null; video.style.display = 'block'; }
-  if (canvas) canvas.style.display = 'none';
-  const modal = document.getElementById('cameraModal');
-  if (modal) modal.classList.remove('open');
+  video.srcObject = null;
+  video.style.display = 'block';
+  canvas.style.display = 'none';
+  document.getElementById('cameraModal').classList.remove('open');
 }
 
+/* ── Toast ── */
 function showToast(msg) {
   const t = document.getElementById('toast');
-  if (!t) return;
   t.textContent = msg; t.classList.add('visible');
   setTimeout(() => t.classList.remove('visible'), 3000);
+}
+
+/* ── Boot auth on load ── */
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => setTimeout(initAuth, 100));
+} else {
+  setTimeout(initAuth, 100);
 }
 </script>
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(e => console.warn('SW registration failed', e));
+    navigator.serviceWorker.register('/sw.js').catch(()=>{ /* ignore sw errors in dev */ });
   });
 }
 </script>
